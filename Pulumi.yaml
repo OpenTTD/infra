@@ -1,0 +1,6 @@
+name: OpenTTD
+runtime:
+  name: python
+  options:
+    virtualenv: .env
+description: OpenTTD's Infrastructure
