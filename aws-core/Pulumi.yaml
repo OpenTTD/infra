@@ -1,0 +1,6 @@
+name: aws-core
+runtime:
+  name: python
+  options:
+    virtualenv: ../.env
+description: AWS Core Infrastructure

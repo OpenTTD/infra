@@ -7,8 +7,13 @@ In this repository are several [Pulumi](pulumi.com/) projects that combined decl
 ```bash
 python3 -m venv .env
 .env/bin/pip install -r requirements.txt
-.env/bin/pulumi up
+
+( cd aws-core && ../.env/bin/pulumi up )
 ```
+
+## Projects
+
+- [aws-core](./aws-core): contains the core infrastructure for AWS.
 
 ## Bootstrapping
 
@@ -23,7 +28,7 @@ To solve this, some minor manual labor is required:
 - Run the following commands:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/files/cloudflared.nomad -o /tmp/cloudflared.nomad
+curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/cloudflared.nomad -o /tmp/cloudflared.nomad
 nomad var put nomad/jobs/cloudflared tunnel_token=<tunnel token>
 nomad job run /tmp/cloudflared.nomad
 ```

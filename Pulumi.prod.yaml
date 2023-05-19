@@ -1,5 +1,0 @@
-config:
-  OpenTTD:console_password:
-    secure: AAABAMpjJKPGYU1KEqTZ+NrODFtGsYXemdTfR/vk+uIbLkfcH492Rvw66W8cZC37h8oojvT8p66fTrEf0e1dLQ==
-  aws:profile: openttd
-  aws:region: eu-central-1

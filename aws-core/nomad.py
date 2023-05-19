@@ -43,8 +43,8 @@ dnf install -y nomad
 
 echo 'ec2-user:{password}' | chpasswd
 
-curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/files/nomad.hcl -o /etc/nomad.d/nomad.hcl
-curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/files/nomad.service -o /etc/systemd/system/nomad.service
+curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.hcl -o /etc/nomad.d/nomad.hcl
+curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.service -o /etc/systemd/system/nomad.service
 
 systemctl enable docker
 systemctl start docker
