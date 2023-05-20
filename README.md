@@ -9,11 +9,15 @@ python3 -m venv .env
 .env/bin/pip install -r requirements.txt
 
 ( cd aws-core && ../.env/bin/pulumi up )
+( cd cloudflare-core && ../.env/bin/pulumi up )
 ```
 
-## Projects
+## Subfolders
+
+### Pulumi projects
 
 - [aws-core](./aws-core): contains the core infrastructure for AWS.
+- [cloudflare-core](./cloudflare-core): contains the core infrastructure for Cloudflare.
 
 ## Bootstrapping
 
@@ -21,6 +25,7 @@ When this is deployed for the first time, [Nomad](https://www.hashicorp.com/prod
 In result, it is inaccessible.
 
 To solve this, some minor manual labor is required:
+- Run `pulumi stack output tunnel_token --show-secrets` in the `cloudflare-core` project and remember the output.
 - Login to AWS.
 - Find one of the Nomad EC2 instances.
 - Open an EC2 Serial Console.

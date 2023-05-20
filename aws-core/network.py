@@ -32,7 +32,7 @@ class Network(pulumi.ComponentResource):
             tags={
                 "Name": gateway_name,
             },
-            opts=pulumi.ResourceOptions(parent=self),
+            opts=pulumi.ResourceOptions(parent=self.vpc),
         )
 
         route_table_name = f"{name}-route-table"
@@ -48,7 +48,7 @@ class Network(pulumi.ComponentResource):
             tags={
                 "Name": route_table_name,
             },
-            opts=pulumi.ResourceOptions(parent=self),
+            opts=pulumi.ResourceOptions(parent=self.vpc),
         )
 
         cidr_v4_block = ipaddress.ip_network(args.cidr_block)
@@ -78,14 +78,14 @@ class Network(pulumi.ComponentResource):
                 tags={
                     "Name": subnet_name,
                 },
-                opts=pulumi.ResourceOptions(parent=self),
+                opts=pulumi.ResourceOptions(parent=self.vpc),
             )
 
             pulumi_aws.ec2.RouteTableAssociation(
                 f"{name}-subnet-{i + 1}-route",
                 route_table_id=self.route_table.id,
                 subnet_id=subnet.id,
-                opts=pulumi.ResourceOptions(parent=self),
+                opts=pulumi.ResourceOptions(parent=subnet),
             )
 
             self.subnets.append(subnet)

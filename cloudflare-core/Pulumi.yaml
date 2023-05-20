@@ -1,0 +1,6 @@
+name: cloudflare-core
+runtime:
+  name: python
+  options:
+    virtualenv: ../.env
+description: Cloudflare Core Infrastructure
