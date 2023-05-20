@@ -142,9 +142,7 @@ class Tunnel(pulumi.ComponentResource):
                     decision="non_identity",
                     includes=[
                         pulumi_cloudflare.AccessPolicyIncludeArgs(
-                            service_tokens=[
-                                self.service_token.id
-                            ],
+                            service_tokens=[self.service_token.id],
                         ),
                     ],
                     name="Service Token",

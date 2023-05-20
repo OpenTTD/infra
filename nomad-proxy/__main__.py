@@ -8,6 +8,7 @@ routes = web.RouteTableDef()
 
 NOMAD_HOST = None
 
+
 @routes.route("*", "/{tail:.*}")
 async def proxy(request):
     headers = dict(request.headers)
