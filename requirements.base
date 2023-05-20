@@ -1,0 +1,5 @@
+aiohttp
+pulumi
+pulumi-aws
+pulumi-cloudflare
+pulumi-random
