@@ -16,6 +16,7 @@ class TunnelArgs:
 
 @dataclass
 class TunnelRoute:
+    name: str
     hostname: str
     service: str
     allow_service_token: bool = False
@@ -106,19 +107,17 @@ class Tunnel(pulumi.ComponentResource):
                 )
             )
 
-            name = route.hostname.split(".")[0]
-
             application = pulumi_cloudflare.AccessApplication(
-                f"{self._name}-app-{name}",
+                f"{self._name}-app-{route.name}",
                 account_id=self.tunnel.account_id,
                 domain=route.hostname,
-                name=name,
+                name=route.name,
                 type="self_hosted",
                 opts=pulumi.ResourceOptions(parent=self),
             )
 
             pulumi_cloudflare.AccessPolicy(
-                f"{self._name}-app-{name}-policy",
+                f"{self._name}-app-{route.name}-policy",
                 account_id=self.tunnel.account_id,
                 application_id=application.id,
                 decision="allow",
@@ -136,7 +135,7 @@ class Tunnel(pulumi.ComponentResource):
 
             if route.allow_service_token:
                 pulumi_cloudflare.AccessPolicy(
-                    f"{self._name}-app-{name}-policy-st",
+                    f"{self._name}-app-{route.name}-policy-st",
                     account_id=self.tunnel.account_id,
                     application_id=application.id,
                     decision="non_identity",

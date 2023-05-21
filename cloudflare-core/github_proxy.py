@@ -9,6 +9,7 @@ class GitHubProxyArgs:
     account_id: str
     hostname: str
     zone_id: str
+    whitelist_ipv6_cidr: str
 
 
 class GitHubProxy(pulumi.ComponentResource):
@@ -37,6 +38,33 @@ class GitHubProxy(pulumi.ComponentResource):
             service=name,
             zone_id=args.zone_id,
             opts=pulumi.ResourceOptions(parent=worker),
+        )
+
+        application = pulumi_cloudflare.AccessApplication(
+            f"{name}-app",
+            account_id=args.account_id,
+            app_launcher_visible=False,
+            domain=args.hostname,
+            name=name,
+            type="self_hosted",
+            opts=pulumi.ResourceOptions(parent=self),
+        )
+
+        pulumi_cloudflare.AccessPolicy(
+            f"{name}-app-policy",
+            account_id=args.account_id,
+            application_id=application.id,
+            decision="bypass",
+            includes=[
+                pulumi_cloudflare.AccessPolicyIncludeArgs(
+                    ips=[
+                        args.whitelist_ipv6_cidr,
+                    ]
+                ),
+            ],
+            name="IPv6 Whitelist",
+            precedence=1,
+            opts=pulumi.ResourceOptions(parent=application),
         )
 
         self.register_outputs({})

@@ -27,3 +27,5 @@ nomad = nomad.Nomad(
         console_password=config.require_secret("console_password"),
     ),
 )
+
+pulumi.export("ipv6_cidr", network.vpc.ipv6_cidr_block)

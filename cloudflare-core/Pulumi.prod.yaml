@@ -1,7 +1,6 @@
 config:
   cloudflare-core:account_id:
     secure: AAABAI+fpZsldH6jBBi7TyntfcdVNHEsLcOta2LksBayU9xiplUiQT625QCMn9FIVB49QfGrUx0VHM7S7zGZJA==
-  cloudflare-core:domain: openttd.org
   cloudflare-core:github_access_group: Core Developers
   cloudflare-core:github_client_id:
     secure: AAABANvmE6mwrqL9HUwUxTvwCuHemlMDnWQ0HhAw31lye8mfhj38Og358T5J54Aif17ouw==
