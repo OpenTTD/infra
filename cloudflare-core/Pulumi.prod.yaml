@@ -8,3 +8,5 @@ config:
   cloudflare-core:github_client_secret:
     secure: AAABAMtC5icH0t80QeCzYdh7f7JcxBPiwh/KuENKhg2ufYE1naf8M8fORVeJSgkrjnTB2q6P3/hXXsUb6Enw6+MYdk+KqNGF
   cloudflare-core:github_organization: OpenTTD
+  cloudflare-core:zone_id:
+    secure: AAABAHeE5qM4TOwe5J3VfWZQdU8eg/Q+vPFAOYp+V1WDuT7SnCLTy44chIHsR3XAtxE/RRHfpYCbfu2ddbEupw==

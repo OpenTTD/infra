@@ -1,8 +1,18 @@
 import pulumi
 
+import ghcr_proxy
 import tunnel
 
 config = pulumi.Config()
+
+ghcr_proxy.GHCRProxy(
+    "ghcr-proxy",
+    ghcr_proxy.GHCRProxyArgs(
+        account_id=config.require("account_id"),
+        hostname=f"ghcr-proxy.{config.require('domain')}",
+        zone_id=config.require_secret("zone_id"),
+    ),
+)
 
 t = tunnel.Tunnel(
     "aws-tunnel",
