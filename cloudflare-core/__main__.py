@@ -1,6 +1,7 @@
 import pulumi
 
 import ghcr_proxy
+import github_proxy
 import tunnel
 
 config = pulumi.Config()
@@ -10,6 +11,15 @@ ghcr_proxy.GHCRProxy(
     ghcr_proxy.GHCRProxyArgs(
         account_id=config.require("account_id"),
         hostname=f"ghcr-proxy.{config.require('domain')}",
+        zone_id=config.require_secret("zone_id"),
+    ),
+)
+
+github_proxy.GitHubProxy(
+    "github-proxy",
+    github_proxy.GitHubProxyArgs(
+        account_id=config.require("account_id"),
+        hostname=f"github-proxy.{config.require('domain')}",
         zone_id=config.require_secret("zone_id"),
     ),
 )
