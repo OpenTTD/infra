@@ -1,0 +1,5 @@
+config:
+  app-wiki:hostname: wiki-nomad
+  aws:profile: openttd
+  aws:region: eu-central-1
+  nomad:address: http://127.0.0.1:4646

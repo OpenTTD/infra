@@ -19,6 +19,9 @@ python3 -m venv .env
 ( cd cloudflare-core && ../.env/bin/pulumi up )
 # Read "Bootstrapping" chapter if this is the first time.
 ( cd nomad-core && ../.env/bin/pulumi up )
+
+cd app
+# Deploy all applications in this folder similar to above.
 ```
 
 ### Proxy
@@ -35,13 +38,17 @@ Now you should be able to execute `nomad node status` and get a valid response.
 
 ## Subfolders
 
-### Pulumi projects
+### Core (Pulumi)
 
 - [aws-core](./aws-core): contains the core infrastructure for AWS.
 - [cloudflare-core](./cloudflare-core): contains the core infrastructure for Cloudflare.
 - [nomad-core](./nomad-core): contains the core infrastructure for Nomad.
 
-### Tools
+### Applications (Pulumi)
+
+- [wiki](./app/wiki): OpenTTD's wiki
+
+### Tools (Python)
 
 - [nomad-proxy](./nomad-proxy): as Nomad runs behind Cloudflare Access, it needs extra credentials before Nomad CLI works.
   This proxy adds those credentials for the Nomad CLI.

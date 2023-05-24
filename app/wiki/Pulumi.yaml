@@ -1,0 +1,6 @@
+name: app-wiki
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - Wiki
