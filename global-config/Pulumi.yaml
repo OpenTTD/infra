@@ -1,0 +1,6 @@
+name: global-config
+runtime:
+  name: python
+  options:
+    virtualenv: ../.env
+description: Global Config for other Projects
