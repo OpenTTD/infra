@@ -68,10 +68,12 @@ systemctl start nomad
             f"{name}-instance",
             ami=ami,
             instance_type="t4g.micro",
-            network_interfaces=[pulumi_aws.ec2.InstanceNetworkInterfaceArgs(
-                network_interface_id=eni.id,
-                device_index=0,
-            )],
+            network_interfaces=[
+                pulumi_aws.ec2.InstanceNetworkInterfaceArgs(
+                    network_interface_id=eni.id,
+                    device_index=0,
+                )
+            ],
             root_block_device=pulumi_aws.ec2.InstanceRootBlockDeviceArgs(
                 volume_size=30,
             ),
