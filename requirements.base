@@ -2,4 +2,5 @@ aiohttp
 pulumi
 pulumi-aws
 pulumi-cloudflare
+pulumi-nomad
 pulumi-random

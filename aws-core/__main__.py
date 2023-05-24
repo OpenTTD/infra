@@ -29,3 +29,5 @@ nomad = nomad.Nomad(
 )
 
 pulumi.export("ipv6_cidr", network.vpc.ipv6_cidr_block)
+pulumi.export("vpc_id", network.vpc.id)
+pulumi.export("subnet_ids", [subnet.id for subnet in network.subnets])

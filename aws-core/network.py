@@ -18,6 +18,7 @@ class Network(pulumi.ComponentResource):
             f"{name}-vpc",
             assign_generated_ipv6_cidr_block=True,
             cidr_block=args.cidr_block,
+            enable_dns_hostnames=True,
             opts=pulumi.ResourceOptions(parent=self),
         )
 

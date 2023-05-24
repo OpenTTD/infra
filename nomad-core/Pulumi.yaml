@@ -1,0 +1,6 @@
+name: nomad-core
+runtime:
+  name: python
+  options:
+    virtualenv: ../.env
+description: Nomad Core Infrastructure
