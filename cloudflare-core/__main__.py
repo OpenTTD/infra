@@ -1,30 +1,45 @@
 import pulumi
 
-import ghcr_proxy
-import github_proxy
+import proxy
 import tunnel
 
 config = pulumi.Config()
 global_config = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 aws_core_config = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/prod")
 
-ghcr_proxy.GHCRProxy(
+proxy.Proxy(
     "ghcr-proxy",
-    ghcr_proxy.GHCRProxyArgs(
+    proxy.ProxyArgs(
         account_id=config.require("account_id"),
         hostname=global_config.get_output("domain").apply(lambda domain: f"ghcr-proxy.{domain}"),
-        zone_id=config.require_secret("zone_id"),
+        proxy_to="ghcr.io",
+        type="registry",
         whitelist_ipv6_cidr=aws_core_config.get_output("ipv6_cidr"),
+        zone_id=config.require_secret("zone_id"),
     ),
 )
 
-github_proxy.GitHubProxy(
+proxy.Proxy(
     "github-proxy",
-    github_proxy.GitHubProxyArgs(
+    proxy.ProxyArgs(
         account_id=config.require("account_id"),
         hostname=global_config.get_output("domain").apply(lambda domain: f"github-proxy.{domain}"),
-        zone_id=config.require_secret("zone_id"),
+        proxy_to="github.com",
+        type="transparent",
         whitelist_ipv6_cidr=aws_core_config.get_output("ipv6_cidr"),
+        zone_id=config.require_secret("zone_id"),
+    ),
+)
+
+proxy.Proxy(
+    "github-api-proxy",
+    proxy.ProxyArgs(
+        account_id=config.require("account_id"),
+        hostname=global_config.get_output("domain").apply(lambda domain: f"github-api-proxy.{domain}"),
+        proxy_to="api.github.com",
+        type="transparent",
+        whitelist_ipv6_cidr=aws_core_config.get_output("ipv6_cidr"),
+        zone_id=config.require_secret("zone_id"),
     ),
 )
 

@@ -3,7 +3,7 @@ export default {
         const url = new URL(request.url);
 
         /* Resend the request to the actual git host. */
-        url.hostname = "github.com";
+        url.hostname = "@@HOSTNAME@@";
         const response = await fetch(url.toString(), {
             method: request.method,
             headers: request.headers,

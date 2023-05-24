@@ -3,7 +3,7 @@ export default {
         const url = new URL(request.url);
 
         /* Resend the request to the actual registry. */
-        url.hostname = "ghcr.io";
+        url.hostname = "@@HOSTNAME@@";
         const response = await fetch(url.toString(), {
             method: request.method,
             headers: request.headers,
