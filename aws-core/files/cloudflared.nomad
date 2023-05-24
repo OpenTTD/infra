@@ -32,6 +32,11 @@ job "cloudflared" {
         destination = "secrets/vars.env"
         env = true
       }
+
+      resources {
+        cpu = 100
+        memory = 64
+      }
     }
   }
 }
