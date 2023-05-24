@@ -1,4 +1,6 @@
 job "cloudflared" {
+  datacenters = ["dc1"]
+
   type = "service"
 
   group "cloudflared" {
@@ -12,7 +14,7 @@ job "cloudflared" {
       driver = "docker"
 
       config {
-        image = "registry.ipv6.docker.com/cloudflare/cloudflared:latest"
+        image = "registry.ipv6.docker.com/cloudflare/cloudflared:2023.5.1"
         args = [
           "tunnel",
           "--no-autoupdate",
