@@ -14,30 +14,21 @@ class Network(pulumi.ComponentResource):
     def __init__(self, name, args: NetworkArgs, opts: pulumi.ResourceOptions = None):
         super().__init__("openttd:aws:Network", name, None, opts)
 
-        vpc_name = f"{name}-vpc"
         self.vpc = pulumi_aws.ec2.Vpc(
-            vpc_name,
+            f"{name}-vpc",
             assign_generated_ipv6_cidr_block=True,
             cidr_block=args.cidr_block,
-            tags={
-                "Name": vpc_name,
-            },
             opts=pulumi.ResourceOptions(parent=self),
         )
 
-        gateway_name = f"{name}-gateway"
         self.gateway = pulumi_aws.ec2.EgressOnlyInternetGateway(
-            gateway_name,
+            f"{name}-gateway",
             vpc_id=self.vpc.id,
-            tags={
-                "Name": gateway_name,
-            },
             opts=pulumi.ResourceOptions(parent=self.vpc),
         )
 
-        route_table_name = f"{name}-route-table"
         self.route_table = pulumi_aws.ec2.RouteTable(
-            route_table_name,
+            f"{name}-route-table",
             routes=[
                 pulumi_aws.ec2.RouteTableRouteArgs(
                     ipv6_cidr_block="::/0",
@@ -45,9 +36,6 @@ class Network(pulumi.ComponentResource):
                 ),
             ],
             vpc_id=self.vpc.id,
-            tags={
-                "Name": route_table_name,
-            },
             opts=pulumi.ResourceOptions(parent=self.vpc),
         )
 
@@ -63,21 +51,16 @@ class Network(pulumi.ComponentResource):
 
         self.subnets = []
         for i, zone in enumerate(pulumi_aws.get_availability_zones().names):
-            subnet_name = f"{name}-subnet-{i + 1}"
-
             cidr_v4 = str(subnet_cidr_v4_block[i])
             cidr_v6 = subnet_cidr_v6_block[i].apply(lambda cidr: str(cidr))
 
             subnet = pulumi_aws.ec2.Subnet(
-                subnet_name,
+                f"{name}-subnet-{i + 1}",
                 assign_ipv6_address_on_creation=True,
                 availability_zone=zone,
                 cidr_block=cidr_v4,
                 ipv6_cidr_block=cidr_v6,
                 vpc_id=self.vpc.id,
-                tags={
-                    "Name": subnet_name,
-                },
                 opts=pulumi.ResourceOptions(parent=self.vpc),
             )
 

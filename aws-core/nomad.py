@@ -45,32 +45,46 @@ echo 'ec2-user:{password}' | chpasswd
 
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.hcl -o /etc/nomad.d/nomad.hcl
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.service -o /etc/systemd/system/nomad.service
+curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-rc.local -o /etc/rc.local
+chmod +x /etc/rc.local
 
-systemctl enable docker
-systemctl start docker
+# Run rc.local now, to avoid a reboot.
+/etc/rc.local
 
 systemctl enable nomad
 systemctl start nomad
 """
         )
 
-        instance_name = f"{name}-instance"
+        eni = pulumi_aws.ec2.NetworkInterface(
+            f"{name}-eni",
+            subnet_id=args.subnets[0],
+            ipv6_address_count=1,
+            ipv6_prefix_count=1,
+            opts=pulumi.ResourceOptions(parent=self),
+        )
+
         self.instance = pulumi_aws.ec2.Instance(
-            instance_name,
+            f"{name}-instance",
             ami=ami,
             instance_type="t4g.micro",
+            network_interfaces=[pulumi_aws.ec2.InstanceNetworkInterfaceArgs(
+                network_interface_id=eni.id,
+                device_index=0,
+            )],
             root_block_device=pulumi_aws.ec2.InstanceRootBlockDeviceArgs(
                 volume_size=30,
             ),
-            subnet_id=args.subnets[0],
             user_data=user_data,
             user_data_replace_on_change=True,
             # vps_security_group_ids=[],  # TODO -- add security group; using "default" is a bad idea
             tags={
                 "AutoJoin": "production",
-                "Name": instance_name,
             },
-            opts=pulumi.ResourceOptions(parent=self),
+            opts=pulumi.ResourceOptions(
+                parent=self,
+                delete_before_replace=True,
+            ),
         )
 
         self.register_outputs({})

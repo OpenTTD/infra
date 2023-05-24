@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Get the current IPv6 prefix.
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+MAC=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/)
+PREFIX=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${MAC}ipv6-prefix)
+
+# Configure the docker daemon to use this prefix.
+echo "{" > /etc/docker/daemon.json
+echo "  \"ipv6\": true," >> /etc/docker/daemon.json
+echo "  \"fixed-cidr-v6\": \"${PREFIX}\"" >> /etc/docker/daemon.json
+echo "}" >> /etc/docker/daemon.json
+
+# Now start the docker engine.
+systemctl start docker
