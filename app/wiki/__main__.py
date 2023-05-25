@@ -1,5 +1,4 @@
 import pulumi
-import pulumi_aws
 import pulumi_nomad
 import pulumi_random
 import pulumi_openttd
@@ -31,7 +30,7 @@ SETTINGS = {
         "https://{}.{}", config.require("hostname"), global_stack.get_output("domain")
     ),
     "reload_secret": pulumi_random.RandomString(
-        f"wiki-reload-secret",
+        "wiki-reload-secret",
         length=32,
         special=False,
     ).result,

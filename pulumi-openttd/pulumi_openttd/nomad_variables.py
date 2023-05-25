@@ -47,7 +47,7 @@ class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
         if args["overwrite_if_exists"] or args["name"] not in current_vars["Items"]:
             current_vars["Items"][args["name"]] = args["value"]
 
-        local_run(f"nomad var put -in json -", stdin=json.dumps(current_vars))
+        local_run("nomad var put -in json -", stdin=json.dumps(current_vars))
 
         return pulumi.dynamic.CreateResult(f"variable-{args['job']}-{args['name']}", args)
 
@@ -57,7 +57,7 @@ class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
         if args["overwrite_if_exists"] or args["name"] not in current_vars["Items"]:
             current_vars["Items"][args["name"]] = args["value"]
 
-        local_run(f"nomad var put -in json -", stdin=json.dumps(current_vars))
+        local_run("nomad var put -in json -", stdin=json.dumps(current_vars))
 
         return pulumi.dynamic.UpdateResult(args)
 
@@ -72,7 +72,7 @@ class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
             del current_vars["Items"][args["name"]]
 
         if current_vars["Items"]:
-            local_run(f"nomad var put -in json -", stdin=json.dumps(current_vars))
+            local_run("nomad var put -in json -", stdin=json.dumps(current_vars))
         else:
             local_run(f"nomad var purge -check-index {current_vars['ModifyIndex']} nomad/jobs/{args['job']}")
 
