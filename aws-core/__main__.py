@@ -1,17 +1,13 @@
 import pulumi
+import pulumi_openttd
 
-import autotag
 import network
 import nomad
 
 config = pulumi.Config()
 
 
-autotag.register(
-    {
-        "Managed-By": "Pulumi",
-    }
-)
+pulumi_openttd.autotag.register()
 
 network = network.Network(
     "network",

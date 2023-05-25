@@ -4,8 +4,12 @@ In this repository are several [Pulumi](pulumi.com/) projects that combined decl
 
 ## Prerequisite
 
-- Make sure you have an AWS profile named `openttd` with valid credentials.
-- Make sure you have set `CLOUDFLARE_API_TOKEN` with a valid Cloudflare API token.
+- An AWS profile named `openttd` with valid credentials.
+- The following environment variables set:
+  - `export CLOUDFLARE_API_TOKEN=` with a valid Cloudflare API token.
+  - `export NOMAD_ADDR=http://127.0.0.1:4646`
+  - `export AWS_PROFILE=openttd`
+  - `export AWS_REGION=eu-central-1`
 
 ## Usage
 
@@ -14,6 +18,7 @@ In this repository are several [Pulumi](pulumi.com/) projects that combined decl
 ```bash
 python3 -m venv .env
 .env/bin/pip install -r requirements.txt
+( cd pulumi-openttd && pip install -e . )
 
 ( cd aws-core && ../.env/bin/pulumi up )
 ( cd cloudflare-core && ../.env/bin/pulumi up )
@@ -48,8 +53,9 @@ Now you should be able to execute `nomad node status` and get a valid response.
 
 - [wiki](./app/wiki): OpenTTD's wiki
 
-### Tools (Python)
+### Others
 
+- [pulumi-openttd](./pulumi-openttd): common bits and pieces for Pulumi used by multiple projects.
 - [nomad-proxy](./nomad-proxy): as Nomad runs behind Cloudflare Access, it needs extra credentials before Nomad CLI works.
   This proxy adds those credentials for the Nomad CLI.
   See the nomad-proxy's [README](./nomad-proxy/README.md) for more information.

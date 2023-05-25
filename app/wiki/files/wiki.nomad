@@ -1,8 +1,8 @@
-job "wiki" {
+job "[[ name ]]" {
   datacenters = ["dc1"]
   type = "service"
 
-  group "wiki" {
+  group "[[ name ]]" {
     # The wiki is stateful; as such, we can only run one container.
     count = 1
 
@@ -14,7 +14,7 @@ job "wiki" {
     volume "cache" {
       type = "csi"
       read_only = false
-      source = "wiki-cache"
+      source = "[[ name ]]-cache"
       access_mode = "multi-node-multi-writer"
       attachment_mode = "file-system"
     }
@@ -23,7 +23,7 @@ job "wiki" {
       driver = "docker"
 
       service {
-        name = "wiki"
+        name = "[[ name ]]"
         port = "http"
         provider = "nomad"
 
@@ -76,7 +76,7 @@ job "wiki" {
 
       template {
         data = <<-EOF
-          {{ with nomadVar "nomad/jobs/wiki" }}
+          {{ with nomadVar "nomad/jobs/[[ name ]]" }}
           CONTAINER_VERSION="{{ .version }}"
 
           TRUEWIKI_SENTRY_DSN="{{ .sentry_dsn }}"

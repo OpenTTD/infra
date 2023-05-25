@@ -2,27 +2,15 @@ import pulumi
 import pulumi_aws
 import pulumi_nomad
 import pulumi_random
+import pulumi_openttd
 
-import autotag
-import variables
 
 config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 aws_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/prod")
 
 
-autotag.register(
-    {
-        "Managed-By": "Pulumi",
-    }
-)
-
-secret = pulumi_random.RandomString(
-    f"wiki-reload-secret",
-    length=32,
-    special=False,
-)
-
+pulumi_openttd.autotag.register()
 
 VARIABLES = {
     "sentry_dsn": "",
@@ -34,62 +22,31 @@ VARIABLES = {
 }
 
 SETTINGS = {
-    "frontend_url": pulumi.Output.format(
-        "https://{}.{}", config.require("hostname"), global_stack.get_output("domain")
-    ),
     "memory": config.require("memory"),
-    "reload_secret": secret.result,
+    "name": config.require("name"),
     "sentry_environment": config.require("sentry-environment"),
     "storage_github_history_url": config.require("storage-github-url"),
     "storage_github_url": config.require("storage-github-url"),
+    "frontend_url": pulumi.Output.format(
+        "https://{}.{}", config.require("hostname"), global_stack.get_output("domain")
+    ),
+    "reload_secret": pulumi_random.RandomString(
+        f"wiki-reload-secret",
+        length=32,
+        special=False,
+    ).result,
 }
 
-
-def mount_target(efs, subnet_ids):
-    for subnet_id in subnet_ids:
-        pulumi_aws.efs.MountTarget(
-            f"wiki-cache-mount-{subnet_id}",
-            file_system_id=efs.id,
-            subnet_id=subnet_id,
-            opts=pulumi.ResourceOptions(parent=efs),
-        )
-
-
-efs = pulumi_aws.efs.FileSystem(
-    "wiki-cache",
-)
-aws_core_stack.get_output("subnet_ids").apply(lambda subnet_ids: mount_target(efs, subnet_ids))
-
-volume = pulumi_nomad.Volume(
-    "wiki-cache",
-    capabilities=[
-        pulumi_nomad.VolumeCapabilityArgs(
-            access_mode="multi-node-multi-writer",
-            attachment_mode="file-system",
-        ),
-    ],
-    external_id=efs.id,
-    plugin_id="aws-efs0",
-    type="csi",
-    volume_id="wiki-cache",
-    opts=pulumi.ResourceOptions(parent=efs),
-)
-
-
-def replace_settings(jobspec, **settings):
-    for key, value in settings.items():
-        jobspec = jobspec.replace(f"[[ {key} ]]", str(value))
-    return jobspec
-
-
-jobspec = pulumi.Output.from_input(open("files/wiki.nomad").read())
-jobspec = pulumi.Output.all(jobspec=jobspec, **SETTINGS).apply(
-    lambda args: replace_settings(**args), run_with_unknowns=True
+volume = pulumi_openttd.VolumeEfs(
+    f"{config.require('name')}-cache",
+    pulumi_openttd.VolumeEfsArgs(
+        subnet_ids=aws_core_stack.get_output("subnet_ids"),
+    ),
 )
 
 job = pulumi_nomad.Job(
-    "wiki",
-    jobspec=jobspec,
+    config.require("name"),
+    jobspec=pulumi_openttd.get_jobspec("files/wiki.nomad", SETTINGS),
     hcl2=pulumi_nomad.JobHcl2Args(
         enabled=True,
     ),
@@ -97,12 +54,12 @@ job = pulumi_nomad.Job(
     opts=pulumi.ResourceOptions(depends_on=[volume]),
 )
 
-for name, value in VARIABLES.items():
-    variables.Variable(
-        f"variable-{name}",
-        variables.VariableArgs(
-            job="wiki",
-            name=name,
+for key, value in VARIABLES.items():
+    pulumi_openttd.NomadVariable(
+        f"variable-{key}",
+        pulumi_openttd.NomadVariableArgs(
+            job=config.require("name"),
+            name=key,
             value=value,
             overwrite_if_exists=False,
         ),

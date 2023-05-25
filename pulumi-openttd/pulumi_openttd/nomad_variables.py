@@ -1,7 +1,5 @@
 import json
 import pulumi
-import pulumi_command
-import pulumi_nomad
 import shlex
 import subprocess
 
@@ -12,7 +10,7 @@ _last_variable = {}
 
 
 @dataclass
-class VariableArgs:
+class NomadVariableArgs:
     job: str
     name: str
     value: str = ""
@@ -29,7 +27,7 @@ def local_run(command, stdin=None, check=True):
     ).stdout
 
 
-class VariableProvider(pulumi.dynamic.ResourceProvider):
+class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
     def _get_current_vars(self, job):
         vars = local_run(f"nomad var get -out json nomad/jobs/{job}", check=False)
 
@@ -93,8 +91,24 @@ class VariableProvider(pulumi.dynamic.ResourceProvider):
         return pulumi.dynamic.DiffResult(changes=changes, replaces=replaces, delete_before_replace=True)
 
 
-class Variable(pulumi.dynamic.Resource, module="nomad", name="Variable"):
-    def __init__(self, name: str, args: VariableArgs, opts: pulumi.ResourceOptions = None):
+class NomadVariable(pulumi.dynamic.Resource, module="nomad", name="NomadVariable"):
+    """
+    Manage a Nomad variable.
+
+    This resource handles the creation, update and deletion of a Nomad variable.
+
+    Note: although with the Nomad CLI and API you need to change all variables
+    for a given job, there is no need for that with this resource. This resource
+    will only change the variable you specify, and leave the rest alone.
+
+    Note: because of the above, it is important that only one variable at the
+    time is manipulated. As such, internally variables are ordered per job, and
+    the last variable created is used as a dependency for the next variable.
+    This means that creating a lot of variables for a single job will be rather
+    slow, as they are handled one by one.
+    """
+
+    def __init__(self, name: str, args: NomadVariableArgs, opts: pulumi.ResourceOptions = None):
         # Ensure only one variable is manipulated per job at the time.
         if args.job in _last_variable:
             if opts:
@@ -103,4 +117,4 @@ class Variable(pulumi.dynamic.Resource, module="nomad", name="Variable"):
                 opts = pulumi.ResourceOptions(depends_on=[_last_variable[args.job]])
         _last_variable[args.job] = self
 
-        super().__init__(VariableProvider(), name, vars(args), opts)
+        super().__init__(NomadVariableProvider(), name, vars(args), opts)

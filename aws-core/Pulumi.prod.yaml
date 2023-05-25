@@ -1,5 +1,3 @@
 config:
   aws-core:console_password:
     secure: AAABAG7VYcGykYKoY2h7d0RE3qE34Fg8vVHK3rAINsmKMjAstxxGJY7j8N5SQySdhvHSC3XyREB2CEUAAT97DQ==
-  aws:profile: openttd
-  aws:region: eu-central-1
