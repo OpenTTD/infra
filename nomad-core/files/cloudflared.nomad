@@ -1,7 +1,7 @@
 job "cloudflared" {
   datacenters = ["dc1"]
 
-  type = "service"
+  type = "system"
 
   group "cloudflared" {
     count = 1
