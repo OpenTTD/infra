@@ -21,7 +21,9 @@ async def proxy(request):
     async with aiohttp.ClientSession() as session:
         command = getattr(session, request.method.lower())
 
-        async with command(f"https://{NOMAD_HOST}/{request.match_info['tail']}?{request.query_string}", data=data, headers=headers) as resp:
+        async with command(
+            f"https://{NOMAD_HOST}/{request.match_info['tail']}?{request.query_string}", data=data, headers=headers
+        ) as resp:
             return web.Response(text=await resp.text(), status=resp.status)
 
 
