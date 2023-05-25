@@ -20,7 +20,13 @@ class VariableArgs:
 
 
 def local_run(command, stdin=None, check=True):
-    return subprocess.run(shlex.split(command), input=stdin.encode() if stdin else None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=check).stdout
+    return subprocess.run(
+        shlex.split(command),
+        input=stdin.encode() if stdin else None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=check,
+    ).stdout
 
 
 class VariableProvider(pulumi.dynamic.ResourceProvider):
@@ -82,7 +88,7 @@ class VariableProvider(pulumi.dynamic.ResourceProvider):
         # Don't attempt to update change of name/job cleanly, and just delete and recreate.
         if old_args["name"] != args["name"] or old_args["job"] != args["job"]:
             replaces.append("name")
-            changes=True
+            changes = True
 
         return pulumi.dynamic.DiffResult(changes=changes, replaces=replaces, delete_before_replace=True)
 

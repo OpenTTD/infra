@@ -1,6 +1,7 @@
 import pulumi
 import pulumi_aws
 import pulumi_nomad
+import pulumi_random
 
 import autotag
 import variables
@@ -16,24 +17,31 @@ autotag.register(
     }
 )
 
+secret = pulumi_random.RandomString(
+    f"wiki-reload-secret",
+    length=32,
+    special=False,
+)
+
 
 VARIABLES = {
-    "version": ":dev",
     "sentry_dsn": "",
     "storage_github_app_id": "",
     "storage_github_app_key": "",
     "user_github_client_id": "",
     "user_github_client_secret": "",
-    "reload_secret": "",
+    "version": ":dev",
 }
 
 SETTINGS = {
-    "storage_github_url": "https://github-proxy.openttd.org/OpenTTD/wiki-data-staging",
-    "storage_github_history_url": "https://github-proxy.openttd.org/OpenTTD/wiki-data-staging",
-    "storage_github_api_url": "https://github-api-proxy.openttd.org",
-    "user_github_api_url": "https://github-api-proxy.openttd.org",
-    "user_github_url": "https://github-proxy.openttd.org",
-    "frontend_url": global_stack.get_output("domain").apply(lambda domain: f"https://{config.require('hostname')}.{domain}"),
+    "frontend_url": pulumi.Output.format(
+        "https://{}.{}", config.require("hostname"), global_stack.get_output("domain")
+    ),
+    "memory": config.require("memory"),
+    "reload_secret": secret.result,
+    "sentry_environment": config.require("sentry-environment"),
+    "storage_github_history_url": config.require("storage-github-url"),
+    "storage_github_url": config.require("storage-github-url"),
 }
 
 
@@ -67,9 +75,21 @@ volume = pulumi_nomad.Volume(
     opts=pulumi.ResourceOptions(parent=efs),
 )
 
+
+def replace_settings(jobspec, **settings):
+    for key, value in settings.items():
+        jobspec = jobspec.replace(f"[[ {key} ]]", str(value))
+    return jobspec
+
+
+jobspec = pulumi.Output.from_input(open("files/wiki.nomad").read())
+jobspec = pulumi.Output.all(jobspec=jobspec, **SETTINGS).apply(
+    lambda args: replace_settings(**args), run_with_unknowns=True
+)
+
 job = pulumi_nomad.Job(
     "wiki",
-    jobspec=open("files/wiki.nomad").read(),
+    jobspec=jobspec,
     hcl2=pulumi_nomad.JobHcl2Args(
         enabled=True,
     ),
@@ -85,17 +105,6 @@ for name, value in VARIABLES.items():
             name=name,
             value=value,
             overwrite_if_exists=False,
-        ),
-        opts=pulumi.ResourceOptions(parent=job),
-    )
-
-for name, value in SETTINGS.items():
-    variables.Variable(
-        f"setting-{name}",
-        variables.VariableArgs(
-            job="wiki",
-            name=name,
-            value=value,
         ),
         opts=pulumi.ResourceOptions(parent=job),
     )

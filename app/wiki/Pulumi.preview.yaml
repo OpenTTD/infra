@@ -1,0 +1,8 @@
+config:
+  app-wiki:hostname: wiki-preview
+  app-wiki:memory: 128
+  app-wiki:sentry-environment: preview
+  app-wiki:storage-github-url: https://github-proxy.openttd.org/OpenTTD/wiki-data-staging
+  aws:profile: openttd
+  aws:region: eu-central-1
+  nomad:address: http://127.0.0.1:4646

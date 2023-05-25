@@ -3,6 +3,7 @@ job "wiki" {
   type = "service"
 
   group "wiki" {
+    # The wiki is stateful; as such, we can only run one container.
     count = 1
 
     network {
@@ -44,11 +45,19 @@ job "wiki" {
       config {
         image = "ghcr-proxy.openttd.org/truebrain/truewiki${CONTAINER_VERSION}"
         args = [
-          "--bind",
-          "::",
-          "--bind",
-          "0.0.0.0",
-        ]
+          "--bind", "::",
+          "--bind", "0.0.0.0",
+          "--storage", "github",
+          "--storage-github-url", "[[ storage_github_url ]]",
+          "--storage-github-api-url", "https://github-api-proxy.openttd.org",
+          "--storage-folder", "/data",
+          "--frontend-url", "[[ frontend_url ]]",
+          "--user", "github",
+          "--user-github-api-url", "https://github-api-proxy.openttd.org",
+          "--user-github-url", "https://github-proxy.openttd.org",
+          "--cache-metadata-file", "/cache/metadata.json",
+          "--cache-page-folder", "/cache-pages",
+       ]
         network_mode = "bridge"
         advertise_ipv6_address = true
         ports = ["http"]
@@ -60,32 +69,24 @@ job "wiki" {
         read_only   = false
       }
 
+      env {
+        TRUEWIKI_SENTRY_ENVIRONMENT = "[[ sentry_environment ]]"
+        TRUEWIKI_RELOAD_SECRET = "[[ reload_secret ]]"
+      }
+
       template {
         data = <<-EOF
           {{ with nomadVar "nomad/jobs/wiki" }}
           CONTAINER_VERSION="{{ .version }}"
 
           TRUEWIKI_SENTRY_DSN="{{ .sentry_dsn }}"
-          TRUEWIKI_FRONTEND_URL="{{ .frontend_url }}"
-          TRUEWIKI_RELOAD_SECRET="{{ .reload_secret }}"
 
-          TRUEWIKI_STORAGE="github"
-          TRUEWIKI_STORAGE_GITHUB_URL="{{ .storage_github_url }}"
-          TRUEWIKI_STORAGE_GITHUB_HISTORY_URL="{{ .storage_github_history_url }}"
           TRUEWIKI_STORAGE_GITHUB_APP_ID="{{ .storage_github_app_id }}"
           TRUEWIKI_STORAGE_GITHUB_APP_KEY="{{ .storage_github_app_key }}"
-          TRUEWIKI_STORAGE_GITHUB_API_URL="{{ .storage_github_api_url }}"
-          TRUEWIKI_STORAGE_FOLDER="/data"
 
-          TRUEWIKI_USER="github"
           TRUEWIKI_USER_GITHUB_CLIENT_ID="{{ .user_github_client_id }}"
           TRUEWIKI_USER_GITHUB_CLIENT_SECRET="{{ .user_github_client_secret }}"
-          TRUEWIKI_USER_GITHUB_API_URL="{{ .user_github_api_url }}"
-          TRUEWIKI_USER_GITHUB_URL="{{ .user_github_url }}"
-
-          TRUEWIKI_CACHE_METADATA_FILE="/cache/metadata.json"
-          TRUEWIKI_CACHE_PAGE_FOLDER="/cache-pages"
-          {{ end }}
+         {{ end }}
         EOF
 
         destination = "secrets/vars.env"
@@ -94,7 +95,7 @@ job "wiki" {
 
       resources {
         cpu = 100
-        memory = 128
+        memory = [[ memory ]]
       }
     }
   }

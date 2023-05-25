@@ -1,5 +1,8 @@
 config:
-  app-wiki:hostname: wiki-nomad
+  app-wiki:hostname: wiki
+  app-wiki:memory: 384
+  app-wiki:sentry-environment: production
+  app-wiki:storage-github-url: https://github-proxy.openttd.org/OpenTTD/wiki-data
   aws:profile: openttd
   aws:region: eu-central-1
   nomad:address: http://127.0.0.1:4646
