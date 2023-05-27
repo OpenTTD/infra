@@ -2,7 +2,7 @@ job "wiki-[[ stack ]]" {
   datacenters = ["dc1"]
   type = "service"
 
-  group "wiki-[[ stack ]]" {
+  group "wiki" {
     # The wiki is stateful; as such, we can only run one container.
     count = 1
 

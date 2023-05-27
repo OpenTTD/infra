@@ -84,3 +84,15 @@ job = pulumi_nomad.Job(
     purge_on_destroy=True,
     opts=pulumi.ResourceOptions(depends_on=[volume, *variables.values()]),
 )
+
+jobspec_deploy = open("files/deploy.nomad", "rb").read().decode()
+jobspec_deploy = jobspec_deploy.replace("[[ stack ]]", pulumi.get_stack())
+
+job = pulumi_nomad.Job(
+    "job-deploy",
+    jobspec=jobspec_deploy,
+    hcl2=pulumi_nomad.JobHcl2Args(
+        enabled=True,
+    ),
+    purge_on_destroy=True,
+)
