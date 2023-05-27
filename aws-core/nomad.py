@@ -47,12 +47,17 @@ curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nom
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.service -o /etc/systemd/system/nomad.service
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-rc.local -o /etc/rc.local
 chmod +x /etc/rc.local
+curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.service -o /etc/systemd/system/nomad-proxy.service
+curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.py -o /usr/bin/nomad-proxy
+chmod +x /usr/bin/nomad-proxy
 
 # Run rc.local now, to avoid a reboot.
 /etc/rc.local
 
 systemctl enable nomad
 systemctl start nomad
+systemctl enable nomad-proxy
+systemctl start nomad-proxy
 """
         )
 

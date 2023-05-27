@@ -1,6 +1,5 @@
 [Unit]
-Description=Nomad
-Documentation=https://www.nomadproject.io/docs/
+Description=Nomad Proxy
 Wants=network-online.target
 After=network-online.target
 
@@ -10,7 +9,7 @@ User=root
 Group=root
 
 ExecReload=/bin/kill -HUP $MAINPID
-ExecStart=/usr/bin/nomad agent -config /etc/nomad.d
+ExecStart=/usr/bin/nomad-proxy
 KillMode=process
 KillSignal=SIGINT
 LimitNOFILE=65536

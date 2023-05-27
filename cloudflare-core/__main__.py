@@ -58,7 +58,7 @@ t.add_route(
     tunnel.TunnelRoute(
         name="nomad",
         hostname=global_stack.get_output("domain").apply(lambda domain: f"nomad.{domain}"),
-        service="http://127.0.0.1:4646",
+        service="http://127.0.0.1:8646",
         allow_service_token=True,
     )
 )
