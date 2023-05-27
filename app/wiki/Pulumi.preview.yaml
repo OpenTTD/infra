@@ -1,6 +1,5 @@
 config:
   app-wiki:hostname: wiki-preview
   app-wiki:memory: "128"
-  app-wiki:name: wiki-preview
   app-wiki:sentry-environment: preview
   app-wiki:storage-github-url: https://github-proxy.openttd.org/OpenTTD/wiki-data-staging

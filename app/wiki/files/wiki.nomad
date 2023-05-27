@@ -1,8 +1,8 @@
-job "[[ name ]]" {
+job "wiki-[[ stack ]]" {
   datacenters = ["dc1"]
   type = "service"
 
-  group "[[ name ]]" {
+  group "wiki-[[ stack ]]" {
     # The wiki is stateful; as such, we can only run one container.
     count = 1
 
@@ -14,7 +14,7 @@ job "[[ name ]]" {
     volume "cache" {
       type = "csi"
       read_only = false
-      source = "[[ name ]]-cache"
+      source = "wiki-[[ stack ]]-cache"
       access_mode = "multi-node-multi-writer"
       attachment_mode = "file-system"
     }
@@ -23,7 +23,7 @@ job "[[ name ]]" {
       driver = "docker"
 
       service {
-        name = "[[ name ]]"
+        name = "wiki-[[ stack ]]"
         port = "http"
         provider = "nomad"
 
@@ -43,7 +43,7 @@ job "[[ name ]]" {
       }
 
       config {
-        image = "ghcr-proxy.openttd.org/truebrain/truewiki${CONTAINER_VERSION}"
+        image = "ghcr-proxy.openttd.org/truebrain/truewiki[[ version ]]"
         args = [
           "--bind", "::",
           "--bind", "0.0.0.0",
@@ -70,27 +70,16 @@ job "[[ name ]]" {
       }
 
       env {
-        TRUEWIKI_SENTRY_ENVIRONMENT = "[[ sentry_environment ]]"
         TRUEWIKI_RELOAD_SECRET = "[[ reload_secret ]]"
-      }
 
-      template {
-        data = <<-EOF
-          {{ with nomadVar "nomad/jobs/[[ name ]]" }}
-          CONTAINER_VERSION="{{ .version }}"
+        TRUEWIKI_SENTRY_DSN = "[[ sentry_dsn ]]"
+        TRUEWIKI_SENTRY_ENVIRONMENT = "[[ sentry_environment ]]"
 
-          TRUEWIKI_SENTRY_DSN="{{ .sentry_dsn }}"
+        TRUEWIKI_STORAGE_GITHUB_APP_ID = "[[ storage_github_app_id ]]"
+        TRUEWIKI_STORAGE_GITHUB_APP_KEY = "[[ storage_github_app_key ]]"
 
-          TRUEWIKI_STORAGE_GITHUB_APP_ID="{{ .storage_github_app_id }}"
-          TRUEWIKI_STORAGE_GITHUB_APP_KEY="{{ .storage_github_app_key }}"
-
-          TRUEWIKI_USER_GITHUB_CLIENT_ID="{{ .user_github_client_id }}"
-          TRUEWIKI_USER_GITHUB_CLIENT_SECRET="{{ .user_github_client_secret }}"
-         {{ end }}
-        EOF
-
-        destination = "secrets/vars.env"
-        env = true
+        TRUEWIKI_USER_GITHUB_CLIENT_ID = "[[ user_github_client_id ]]"
+        TRUEWIKI_USER_GITHUB_CLIENT_SECRET = "[[ user_github_client_secret ]]"
       }
 
       resources {

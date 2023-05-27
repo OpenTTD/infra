@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 @dataclass
 class VolumeEfsArgs:
+    name: str
     subnet_ids: list[str]
 
 
@@ -20,6 +21,9 @@ class VolumeEfs(pulumi.ComponentResource):
 
         self.efs = pulumi_aws.efs.FileSystem(
             name,
+            tags={
+                "Name": args.name,
+            },
         )
         args.subnet_ids.apply(lambda subnet_ids: self._mount_target(name, self.efs, subnet_ids))
 
@@ -32,10 +36,10 @@ class VolumeEfs(pulumi.ComponentResource):
                 ),
             ],
             external_id=self.efs.id,
-            name=name,
+            name=args.name,
             plugin_id="aws-efs0",
             type="csi",
-            volume_id=name,
+            volume_id=args.name,
             opts=pulumi.ResourceOptions(
                 parent=self.efs,
                 delete_before_replace=True,

@@ -1,6 +1,5 @@
 config:
   app-wiki:hostname: wiki
   app-wiki:memory: "384"
-  app-wiki:name: wiki
   app-wiki:sentry-environment: production
   app-wiki:storage-github-url: https://github-proxy.openttd.org/OpenTTD/wiki-data
