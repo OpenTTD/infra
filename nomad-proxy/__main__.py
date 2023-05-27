@@ -23,8 +23,28 @@ async def proxy(request):
 
         async with command(
             f"https://{NOMAD_HOST}/{request.match_info['tail']}?{request.query_string}", data=data, headers=headers
-        ) as resp:
-            return web.Response(text=await resp.text(), status=resp.status)
+        ) as proxy_response:
+            response = web.StreamResponse()
+            response.headers.update(proxy_response.headers)
+            response.set_status(proxy_response.status)
+
+            # We decompressed the response, so we need to remove the Content-Encoding / Content-Length header.
+            if "Content-Encoding" in response.headers:
+                del response.headers["Content-Encoding"]
+            if "Content-Length" in response.headers:
+                del response.headers["Content-Length"]
+
+            await response.prepare(request)
+
+            # Handle streaming data.
+            while not proxy_response.content.is_eof():
+                while not proxy_response.content._buffer and not proxy_response.content._eof:
+                    await proxy_response.content._wait("read")
+                await response.write(proxy_response.content.read_nowait(-1))
+
+            # Read the remaining of the existing buffer.
+            await response.write(proxy_response.content.read_nowait(-1))
+            return response
 
 
 def main():
