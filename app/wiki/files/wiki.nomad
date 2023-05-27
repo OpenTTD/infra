@@ -19,6 +19,13 @@ job "wiki-[[ stack ]]" {
       attachment_mode = "file-system"
     }
 
+    update {
+      max_parallel = 1
+      health_check = "checks"
+      auto_promote = true
+      canary = 1
+    }
+
     task "app" {
       driver = "docker"
 
@@ -27,12 +34,14 @@ job "wiki-[[ stack ]]" {
         port = "http"
         provider = "nomad"
 
+        canary_tags = ["canary"]
+
         check {
           type = "http"
           name = "app_health"
           path = "/healthz"
           interval = "20s"
-          timeout  = "5s"
+          timeout = "5s"
 
           check_restart {
             limit = 3

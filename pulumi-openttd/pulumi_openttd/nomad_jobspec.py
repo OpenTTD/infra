@@ -7,8 +7,8 @@ def _replace_settings(jobspec, **settings):
     return jobspec
 
 
-def get_jobspec(filename, settings):
-    jobspec = pulumi.Output.from_input(open(filename).read())
+def get_jobspec(jobspec, settings):
+    jobspec = pulumi.Output.from_input(jobspec)
     return pulumi.Output.all(jobspec=jobspec, **dict((key, setting.value) for key, setting in settings.items())).apply(
         lambda args: _replace_settings(**args), run_with_unknowns=True
     )

@@ -1,3 +1,4 @@
+import base64
 import pulumi
 import pulumi_nomad
 import pulumi_random
@@ -18,14 +19,6 @@ reload_secret = pulumi_random.RandomString(
 )
 frontend_url = pulumi.Output.format("https://{}.{}", config.require("hostname"), global_stack.get_output("domain"))
 
-# Some settings can be changed in the Nomad Variables, and should win from
-# what-ever is defined here.
-SETTINGS_DYNAMIC = {
-    "version": ":dev",
-}
-
-# These settings are defined by Pulumi, and overwrite what is defined in the
-# Nomad Variables.
 SETTINGS = {
     "frontend_url": frontend_url,
     "memory": config.require("memory"),
@@ -50,30 +43,41 @@ volume = pulumi_openttd.VolumeEfs(
 )
 
 variables = {}
-for key, value in SETTINGS_DYNAMIC.items():
-    variables[key] = pulumi_openttd.NomadVariable(
-        f"setting-dynamic-{key}",
-        pulumi_openttd.NomadVariableArgs(
-            path=f"app/wiki-{pulumi.get_stack()}/dynamic",
-            name=key,
-            value=value,
-            overwrite_if_exists=False,
-        ),
-    )
 for key, value in SETTINGS.items():
     variables[key] = pulumi_openttd.NomadVariable(
         f"setting-{key}",
         pulumi_openttd.NomadVariableArgs(
-            path=f"app/wiki-{pulumi.get_stack()}/static",
+            path=f"app/wiki-{pulumi.get_stack()}/settings",
             name=key,
             value=value,
             overwrite_if_exists=True,
         ),
     )
 
+variables["version"] = pulumi_openttd.NomadVariable(
+    "version",
+    pulumi_openttd.NomadVariableArgs(
+        path=f"app/wiki-{pulumi.get_stack()}/version",
+        name="version",
+        value=":dev",  # Just the initial value.
+        overwrite_if_exists=False,
+    ),
+)
+
+jobspec = open("files/wiki.nomad", "rb").read()
+pulumi_openttd.NomadVariable(
+    f"jobspec",
+    pulumi_openttd.NomadVariableArgs(
+        path=f"app/wiki-{pulumi.get_stack()}/jobspec",
+        name="jobspec",
+        value=base64.b64encode(jobspec).decode(),
+        overwrite_if_exists=True,
+    ),
+)
+
 job = pulumi_nomad.Job(
     "job",
-    jobspec=pulumi_openttd.get_jobspec("files/wiki.nomad", variables),
+    jobspec=pulumi_openttd.get_jobspec(jobspec.decode(), variables),
     hcl2=pulumi_nomad.JobHcl2Args(
         enabled=True,
     ),
