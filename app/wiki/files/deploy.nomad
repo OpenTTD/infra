@@ -9,11 +9,14 @@ job "wiki-[[ stack ]]-deploy" {
   }
 
   group "deploy" {
+    # Prevent more than one deployment running at the same time.
+    count = 1
+
+    # If deployment fails, it fails; don't retry.
     reschedule {
       attempts = 0
       unlimited = false
     }
-
     restart {
       attempts = 0
     }
@@ -90,7 +93,7 @@ subprocess.run(
     check=True,
 )
 
-print("Done")
+print("New version deployed.")
 EOT
       }
 
