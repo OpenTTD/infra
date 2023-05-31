@@ -4,8 +4,6 @@ job "cloudflared" {
   type = "system"
 
   group "cloudflared" {
-    count = 1
-
     network {
       mode = "host"
     }

@@ -34,7 +34,12 @@ job "wiki-[[ stack ]]" {
         port = "http"
         provider = "nomad"
 
-        canary_tags = ["canary"]
+        tags = [
+          "port=7000"
+        ]
+        canary_tags = [
+          "canary"
+        ]
 
         check {
           type = "http"

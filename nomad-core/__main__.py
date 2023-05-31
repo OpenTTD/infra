@@ -22,3 +22,13 @@ job = pulumi_nomad.Job(
     ),
     purge_on_destroy=True,
 )
+
+
+job = pulumi_nomad.Job(
+    "nginx",
+    jobspec=open("files/nginx.nomad").read(),
+    hcl2=pulumi_nomad.JobHcl2Args(
+        enabled=True,
+    ),
+    purge_on_destroy=True,
+)
