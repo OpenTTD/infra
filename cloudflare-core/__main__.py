@@ -7,6 +7,13 @@ config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 aws_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/prod")
 
+# Port -> (Public, Subdomain)
+ROUTE_MAPPING = {
+    "8646": (False, "nomad"),
+    # "11000": (True, "wiki"),
+    "12000": (True, "wiki-preview"),
+}
+
 proxy.Proxy(
     "ghcr-proxy",
     proxy.ProxyArgs(
@@ -51,17 +58,20 @@ t = tunnel.Tunnel(
         github_client_secret=config.require_secret("github_client_secret"),
         github_organization=config.require("github_organization"),
         github_access_group=config.require("github_access_group"),
+        zone_id=global_stack.get_output("cloudflare_zone_id"),
     ),
 )
 
-t.add_route(
-    tunnel.TunnelRoute(
-        name="nomad",
-        hostname=global_stack.get_output("domain").apply(lambda domain: f"nomad.{domain}"),
-        service="http://127.0.0.1:8646",
-        allow_service_token=True,
+for port, (public, name) in ROUTE_MAPPING.items():
+    t.add_route(
+        tunnel.TunnelRoute(
+            name=name,
+            hostname=pulumi.Output.all(name=name, domain=global_stack.get_output("domain")).apply(lambda args: f"{args['name']}.{args['domain']}"),
+            service=f"http://127.0.0.1:{port}",
+            protect=not public,
+            allow_service_token=not public,
+        )
     )
-)
 
 t.create_routes()
 

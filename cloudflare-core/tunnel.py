@@ -12,6 +12,7 @@ class TunnelArgs:
     github_client_secret: str
     github_organization: str
     github_access_group: str
+    zone_id: str
 
 
 @dataclass
@@ -19,6 +20,7 @@ class TunnelRoute:
     name: str
     hostname: str
     service: str
+    protect: bool = False
     allow_service_token: bool = False
 
 
@@ -84,6 +86,7 @@ class Tunnel(pulumi.ComponentResource):
             name=f"{name} Service Token",
             opts=pulumi.ResourceOptions(parent=self),
         )
+        self.zone_id = args.zone_id
 
         self.register_outputs(
             {
@@ -107,47 +110,58 @@ class Tunnel(pulumi.ComponentResource):
                 )
             )
 
-            application = pulumi_cloudflare.AccessApplication(
-                f"{self._name}-app-{route.name}",
-                account_id=self.tunnel.account_id,
-                domain=route.hostname,
-                name=route.name,
-                type="self_hosted",
+            pulumi_cloudflare.Record(
+                f"{self._name}-app-{route.name}-dns",
+                name=route.hostname,
+                proxied=True,
+                type="CNAME",
+                value=self.tunnel.cname,
+                zone_id=self.zone_id,
                 opts=pulumi.ResourceOptions(parent=self),
             )
 
-            pulumi_cloudflare.AccessPolicy(
-                f"{self._name}-app-{route.name}-policy",
-                account_id=self.tunnel.account_id,
-                application_id=application.id,
-                decision="allow",
-                includes=[
-                    pulumi_cloudflare.AccessPolicyIncludeArgs(
-                        groups=[
-                            self.access_group.id,
-                        ],
-                    ),
-                ],
-                name="Policy",
-                precedence=1,
-                opts=pulumi.ResourceOptions(parent=application),
-            )
+            if route.protect:
+                application = pulumi_cloudflare.AccessApplication(
+                    f"{self._name}-app-{route.name}",
+                    account_id=self.tunnel.account_id,
+                    domain=route.hostname,
+                    name=route.name,
+                    type="self_hosted",
+                    opts=pulumi.ResourceOptions(parent=self),
+                )
 
-            if route.allow_service_token:
                 pulumi_cloudflare.AccessPolicy(
-                    f"{self._name}-app-{route.name}-policy-st",
+                    f"{self._name}-app-{route.name}-policy",
                     account_id=self.tunnel.account_id,
                     application_id=application.id,
-                    decision="non_identity",
+                    decision="allow",
                     includes=[
                         pulumi_cloudflare.AccessPolicyIncludeArgs(
-                            service_tokens=[self.service_token.id],
+                            groups=[
+                                self.access_group.id,
+                            ],
                         ),
                     ],
-                    name="Service Token",
-                    precedence=2,
+                    name="Policy",
+                    precedence=1,
                     opts=pulumi.ResourceOptions(parent=application),
                 )
+
+                if route.allow_service_token:
+                    pulumi_cloudflare.AccessPolicy(
+                        f"{self._name}-app-{route.name}-policy-st",
+                        account_id=self.tunnel.account_id,
+                        application_id=application.id,
+                        decision="non_identity",
+                        includes=[
+                            pulumi_cloudflare.AccessPolicyIncludeArgs(
+                                service_tokens=[self.service_token.id],
+                            ),
+                        ],
+                        name="Service Token",
+                        precedence=2,
+                        opts=pulumi.ResourceOptions(parent=application),
+                    )
 
         ingress_rules.append(
             pulumi_cloudflare.TunnelConfigConfigIngressRuleArgs(

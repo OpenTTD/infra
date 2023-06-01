@@ -1,8 +1,10 @@
 import base64
 import pulumi
+import pulumi_cloudflare
 import pulumi_nomad
 import pulumi_random
 import pulumi_openttd
+import pulumiverse_sentry
 
 
 config = pulumi.Config()
@@ -18,20 +20,25 @@ reload_secret = pulumi_random.RandomString(
     special=False,
 )
 frontend_url = pulumi.Output.format("https://{}.{}", config.require("hostname"), global_stack.get_output("domain"))
+sentry_key = pulumiverse_sentry.get_sentry_key(
+    organization="openttd",
+    project="wiki",
+)
 
 SETTINGS = {
     "frontend_url": frontend_url,
     "memory": config.require("memory"),
+    "port": config.require("port"),
     "reload_secret": reload_secret.result,
-    "sentry_dsn": "",
+    "sentry_dsn": sentry_key.dsn_public,
     "sentry_environment": config.require("sentry-environment"),
     "stack": pulumi.get_stack(),
-    "storage_github_app_id": "",
-    "storage_github_app_key": "",
-    "storage_github_history_url": config.require("storage-github-url"),
+    "storage_github_app_id": config.require("storage-github-app-id"),
+    "storage_github_app_key": config.require_secret("storage-github-app-key"),
+    "storage_github_history_url": config.require("storage-github-history-url"),
     "storage_github_url": config.require("storage-github-url"),
-    "user_github_client_id": "",
-    "user_github_client_secret": "",
+    "user_github_client_id": config.require("user-github-client-id"),
+    "user_github_client_secret": config.require_secret("user-github-client-secret"),
 }
 
 volume = pulumi_openttd.VolumeEfs(
@@ -95,4 +102,13 @@ job = pulumi_nomad.Job(
         enabled=True,
     ),
     purge_on_destroy=True,
+)
+
+pulumi_cloudflare.PageRule(
+    "page-rule",
+    actions=pulumi_cloudflare.PageRuleActionsArgs(
+        cache_level="aggressive",
+    ),
+    target=pulumi.Output.format("{}.{}", config.require("hostname"), global_stack.get_output("domain")),
+    zone_id=global_stack.get_output("cloudflare_zone_id"),
 )

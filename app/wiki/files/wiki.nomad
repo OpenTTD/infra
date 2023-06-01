@@ -35,7 +35,7 @@ job "wiki-[[ stack ]]" {
         provider = "nomad"
 
         tags = [
-          "port=7000"
+          "port=[[ port ]]"
         ]
         canary_tags = [
           "canary"
@@ -63,6 +63,7 @@ job "wiki-[[ stack ]]" {
           "--bind", "0.0.0.0",
           "--storage", "github",
           "--storage-github-url", "[[ storage_github_url ]]",
+          "--storage-github-history-url", "[[ storage_github_history_url ]]",
           "--storage-github-api-url", "https://github-api-proxy.openttd.org",
           "--storage-folder", "/data",
           "--frontend-url", "[[ frontend_url ]]",
