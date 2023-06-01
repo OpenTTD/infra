@@ -1,2 +1,6 @@
 config:
+  global-config:cloudflare_account_id:
+    secure: AAABABHcVyMvpwM/y8dLc6KHlT+wpGRbmuq34PrMNrDAwfdktcSkBdo7iPKqNlac8G0CQCfSyz/FwogltWJMDw==
+  global-config:cloudflare_zone_id:
+    secure: AAABAACktDPlZW6641+jnwpXWHn3Xi1LRy2JJ+EpQFu/4gp5RAzrEm7T5x0swX1Qu1OPlTJNdWbgI2L02u+1sw==
   global-config:domain: openttd.org

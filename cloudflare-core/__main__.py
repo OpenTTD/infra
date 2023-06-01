@@ -10,43 +10,43 @@ aws_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/pr
 proxy.Proxy(
     "ghcr-proxy",
     proxy.ProxyArgs(
-        account_id=config.require("account_id"),
+        account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"ghcr-proxy.{domain}"),
         proxy_to="ghcr.io",
         type="registry",
         whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
-        zone_id=config.require_secret("zone_id"),
+        zone_id=global_stack.get_output("cloudflare_zone_id"),
     ),
 )
 
 proxy.Proxy(
     "github-proxy",
     proxy.ProxyArgs(
-        account_id=config.require("account_id"),
+        account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"github-proxy.{domain}"),
         proxy_to="github.com",
         type="transparent",
         whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
-        zone_id=config.require_secret("zone_id"),
+        zone_id=global_stack.get_output("cloudflare_zone_id"),
     ),
 )
 
 proxy.Proxy(
     "github-api-proxy",
     proxy.ProxyArgs(
-        account_id=config.require("account_id"),
+        account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"github-api-proxy.{domain}"),
         proxy_to="api.github.com",
         type="transparent",
         whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
-        zone_id=config.require_secret("zone_id"),
+        zone_id=global_stack.get_output("cloudflare_zone_id"),
     ),
 )
 
 t = tunnel.Tunnel(
     "aws-tunnel",
     tunnel.TunnelArgs(
-        account_id=config.require("account_id"),
+        account_id=global_stack.get_output("cloudflare_account_id"),
         github_client_id=config.require_secret("github_client_id"),
         github_client_secret=config.require_secret("github_client_secret"),
         github_organization=config.require("github_organization"),
