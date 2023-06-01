@@ -17,6 +17,7 @@ job "cloudflared" {
           "tunnel",
           "--no-autoupdate",
           "--edge-ip-version=6",
+          "--protocol=http2",
           "run"
         ]
         network_mode = "host"
