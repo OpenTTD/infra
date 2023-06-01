@@ -71,7 +71,7 @@ job "wiki-[[ stack ]]" {
           "--user-github-url", "https://github-proxy.openttd.org",
           "--cache-metadata-file", "/cache/metadata.json",
           "--cache-page-folder", "/cache-pages",
-       ]
+        ]
         network_mode = "bridge"
         advertise_ipv6_address = true
         ports = ["http"]

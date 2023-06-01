@@ -4,10 +4,10 @@ disable_update_check = true
 
 server {
   enabled = true
-  bootstrap_expect = 1
-#  server_join {
-#    "retry_join": ["provider=aws region=eu-central-1 tag_key=AutoJoin tag_value=production"]
-#  }
+  bootstrap_expect = 3
+  server_join {
+    retry_join = ["provider=aws endpoint=ec2.eu-west-1.api.aws addr_type=private_v4 region=eu-west-1 tag_key=AutoJoin tag_value=nomad"]
+  }
 }
 
 client {

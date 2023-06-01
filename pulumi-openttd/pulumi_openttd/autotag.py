@@ -3,6 +3,10 @@ import pulumi
 
 def auto_tag(args, auto_tags):
     if args.type_.startswith("aws:") and "tags" in args.props:
+        # Tags for autoscaling groups are a bit different, so skip them.
+        if args.type_ == "aws:autoscaling/group:Group":
+            return
+
         if args.props["tags"] is None:
             args.props["tags"] = {}
         args.props["tags"].update(auto_tags)

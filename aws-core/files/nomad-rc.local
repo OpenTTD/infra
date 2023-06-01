@@ -1,9 +1,13 @@
 #!/bin/sh
 
-# Get the current IPv6 prefix.
+# Get the current IPv6 prefix. There can be multiple interfaces, so just pick the first you find.
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-MAC=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/)
-PREFIX=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${MAC}ipv6-prefix)
+for mac in $(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/); do
+    PREFIX=$(curl --fail -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${mac}ipv6-prefix)
+    if [ -n "${PREFIX}" ]; then
+        break
+    fi
+done
 
 # Configure the docker daemon to use this prefix.
 echo "{" > /etc/docker/daemon.json
