@@ -22,6 +22,7 @@ python3 -m venv .env
 .env/bin/pip install -r requirements.txt
 ( cd pulumi-openttd && pip install -e . )
 
+( cd global-config && ../.env/bin/pulumi up )
 ( cd aws-core && ../.env/bin/pulumi up )
 ( cd cloudflare-core && ../.env/bin/pulumi up )
 # Read "Bootstrapping" chapter if this is the first time.
@@ -49,6 +50,7 @@ Now you should be able to execute `nomad node status` and get a valid response.
 
 - [aws-core](./aws-core): contains the core infrastructure for AWS.
 - [cloudflare-core](./cloudflare-core): contains the core infrastructure for Cloudflare.
+- [global-config](./global-config): contains configuration used by multiple other projects.
 - [nomad-core](./nomad-core): contains the core infrastructure for Nomad.
 
 ### Applications (Pulumi)
