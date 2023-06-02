@@ -19,7 +19,7 @@ proxy.Proxy(
     proxy.ProxyArgs(
         account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"ghcr-proxy.{domain}"),
-        proxy_to="ghcr.io",
+        proxy_to=pulumi.Output.from_input("ghcr.io"),
         type="registry",
         whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
         zone_id=global_stack.get_output("cloudflare_zone_id"),
@@ -31,7 +31,7 @@ proxy.Proxy(
     proxy.ProxyArgs(
         account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"github-proxy.{domain}"),
-        proxy_to="github.com",
+        proxy_to=pulumi.Output.from_input("github.com"),
         type="transparent",
         whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
         zone_id=global_stack.get_output("cloudflare_zone_id"),
@@ -43,7 +43,19 @@ proxy.Proxy(
     proxy.ProxyArgs(
         account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"github-api-proxy.{domain}"),
-        proxy_to="api.github.com",
+        proxy_to=pulumi.Output.from_input("api.github.com"),
+        type="transparent",
+        whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
+        zone_id=global_stack.get_output("cloudflare_zone_id"),
+    ),
+)
+
+proxy.Proxy(
+    "sentry-ingest-proxy",
+    proxy.ProxyArgs(
+        account_id=global_stack.get_output("cloudflare_account_id"),
+        hostname=global_stack.get_output("domain").apply(lambda domain: f"sentry-ingest.{domain}"),
+        proxy_to=global_stack.get_output("sentry_ingest_hostname"),
         type="transparent",
         whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
         zone_id=global_stack.get_output("cloudflare_zone_id"),

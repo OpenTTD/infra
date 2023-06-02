@@ -31,7 +31,7 @@ class Proxy(pulumi.ComponentResource):
         worker = pulumi_cloudflare.WorkerScript(
             f"{name}-worker",
             account_id=args.account_id,
-            content=open(f"files/proxy_{args.type}.js").read().replace("@@HOSTNAME@@", args.proxy_to),
+            content=args.proxy_to.apply(lambda proxy_to: open(f"files/proxy_{args.type}.js").read().replace("@@HOSTNAME@@", proxy_to)),
             name=name,
             module=True,
             opts=pulumi.ResourceOptions(parent=self),

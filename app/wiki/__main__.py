@@ -25,12 +25,21 @@ sentry_key = pulumiverse_sentry.get_sentry_key(
     project="wiki",
 )
 
+# sentry.io doesn't support IPv6, so we route it via our own domain.
+sentry_key = pulumi.Output.all(
+    sentry_ingest_hostname=global_stack.get_output("sentry_ingest_hostname"),
+    sentry_key=sentry_key.dsn_public,
+    domain=global_stack.get_output("domain"),
+).apply(
+    lambda args: args["sentry_key"].replace(args["sentry_ingest_hostname"], f"sentry-ingest.{args['domain']}")
+)
+
 SETTINGS = {
     "frontend_url": frontend_url,
     "memory": config.require("memory"),
     "port": config.require("port"),
     "reload_secret": reload_secret.result,
-    "sentry_dsn": sentry_key.dsn_public,
+    "sentry_dsn": sentry_key,
     "sentry_environment": config.require("sentry-environment"),
     "stack": pulumi.get_stack(),
     "storage_github_app_id": config.require("storage-github-app-id"),

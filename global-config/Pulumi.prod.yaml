@@ -4,3 +4,4 @@ config:
   global-config:cloudflare_zone_id:
     secure: AAABAACktDPlZW6641+jnwpXWHn3Xi1LRy2JJ+EpQFu/4gp5RAzrEm7T5x0swX1Qu1OPlTJNdWbgI2L02u+1sw==
   global-config:domain: openttd.org
+  global-config:sentry_ingest_hostname: o220626.ingest.sentry.io
