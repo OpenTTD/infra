@@ -29,6 +29,12 @@ class Nomad(pulumi.ComponentResource):
         user_data = args.console_password.apply(
             lambda password: f"""#!/bin/bash
 
+curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-rc.local -o /etc/rc.d/rc.local
+chmod +x /etc/rc.d/rc.local
+
+systemctl enable rc-local
+systemctl start rc-local
+
 dnf install -y \
     cni-plugins \
     docker \
@@ -49,14 +55,12 @@ pip install aiohttp
 
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.hcl -o /etc/nomad.d/nomad.hcl
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.service -o /etc/systemd/system/nomad.service
-curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-rc.local -o /etc/rc.d/rc.local
-chmod +x /etc/rc.d/rc.local
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.service -o /etc/systemd/system/nomad-proxy.service
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.py -o /usr/bin/nomad-proxy
 chmod +x /usr/bin/nomad-proxy
 
-systemctl enable rc-local
-systemctl start rc-local
+systemctl enable docker
+systemctl start docker
 systemctl enable nomad
 systemctl start nomad
 systemctl enable nomad-proxy
@@ -129,10 +133,6 @@ systemctl start nomad-proxy
                 pulumi_aws.ec2.LaunchTemplateNetworkInterfaceArgs(
                     device_index=0,
                     ipv6_prefix_count=1,
-                ),
-                pulumi_aws.ec2.LaunchTemplateNetworkInterfaceArgs(
-                    device_index=1,
-                    ipv6_address_count=1,
                 ),
             ],
             tag_specifications=[
