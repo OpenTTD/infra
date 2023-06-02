@@ -157,7 +157,7 @@ systemctl start nomad-proxy
                 id=launch_template.id,
                 version=launch_template.latest_version,
             ),
-            max_size=5,
+            max_size=6,
             min_size=1,
             name=f"{name}-asg",
             tags=[
