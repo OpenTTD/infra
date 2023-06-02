@@ -1,13 +1,9 @@
 #!/bin/sh
 
-# Get the current IPv6 prefix. There can be multiple interfaces, so just pick the first you find.
+# Get the current IPv6 prefix.
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-for mac in $(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/); do
-    PREFIX=$(curl --fail -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${mac}ipv6-prefix)
-    if [ -n "${PREFIX}" ]; then
-        break
-    fi
-done
+MAC=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/)
+PREFIX=$(curl --fail -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${MAC}ipv6-prefix)
 
 DOCKER_PREFIX=$(echo ${PREFIX} | sed 's@:0:0:0/80@:1000:0:0/96@')
 LOCAL_IP=$(echo ${PREFIX} | sed 's@:0:0:0/80@:0:0:1/128@')
@@ -19,3 +15,5 @@ echo "{" > /etc/docker/daemon.json
 echo "  \"ipv6\": true," >> /etc/docker/daemon.json
 echo "  \"fixed-cidr-v6\": \"${DOCKER_PREFIX}\"" >> /etc/docker/daemon.json
 echo "}" >> /etc/docker/daemon.json
+
+systemctl start docker

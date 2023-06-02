@@ -29,11 +29,13 @@ class Nomad(pulumi.ComponentResource):
         user_data = args.console_password.apply(
             lambda password: f"""#!/bin/bash
 
-curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-rc.local -o /etc/rc.d/rc.local
-chmod +x /etc/rc.d/rc.local
+echo 'ec2-user:{password}' | chpasswd
 
-systemctl enable rc-local
-systemctl start rc-local
+# Set an IPv6 address so we can talk to the outside world.
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+MAC=$(curl -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/)
+PREFIX=$(curl --fail -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${{MAC}}ipv6-prefix)
+ip -6 addr add $(echo ${{PREFIX}} | sed 's@:0:0:0/80@:0:0:1/128@') dev ens5
 
 dnf install -y \
     cni-plugins \
@@ -49,8 +51,6 @@ dnf install -y \
 dnf config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
 dnf install -y nomad
 
-echo 'ec2-user:{password}' | chpasswd
-
 pip install aiohttp
 
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.hcl -o /etc/nomad.d/nomad.hcl
@@ -58,9 +58,11 @@ curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nom
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.service -o /etc/systemd/system/nomad-proxy.service
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.py -o /usr/bin/nomad-proxy
 chmod +x /usr/bin/nomad-proxy
+curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-rc.local -o /etc/rc.d/rc.local
+chmod +x /etc/rc.d/rc.local
 
-systemctl enable docker
-systemctl start docker
+systemctl enable rc-local
+systemctl start rc-local
 systemctl enable nomad
 systemctl start nomad
 systemctl enable nomad-proxy
