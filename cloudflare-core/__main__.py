@@ -10,7 +10,7 @@ aws_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/pr
 # Port -> (Public, Subdomain)
 ROUTE_MAPPING = {
     "8646": (False, "nomad"),
-    # "11000": (True, "wiki"),
+    "11000": (True, "wiki"),
     "12000": (True, "wiki-preview"),
 }
 

@@ -1,5 +1,5 @@
 config:
-  app-wiki:hostname: wiki-test
+  app-wiki:hostname: wiki
   app-wiki:memory: "384"
   app-wiki:port: "11000"
   app-wiki:sentry-environment: production
