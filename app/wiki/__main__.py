@@ -120,7 +120,7 @@ pulumi_cloudflare.PageRule(
     actions=pulumi_cloudflare.PageRuleActionsArgs(
         cache_level="aggressive",
     ),
-    target=pulumi.Output.format("{}.{}", config.require("hostname"), global_stack.get_output("domain")),
+    target=pulumi.Output.format("{}.{}/*", config.require("hostname"), global_stack.get_output("domain")),
     zone_id=global_stack.get_output("cloudflare_zone_id"),
 )
 
