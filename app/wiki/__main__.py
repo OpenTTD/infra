@@ -1,6 +1,7 @@
 import base64
 import pulumi
 import pulumi_cloudflare
+import pulumi_github
 import pulumi_nomad
 import pulumi_random
 import pulumi_openttd
@@ -10,6 +11,7 @@ import pulumiverse_sentry
 config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 aws_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/prod")
+cloudflare_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/cloudflare-core/prod")
 
 
 pulumi_openttd.autotag.register()
@@ -121,3 +123,19 @@ pulumi_cloudflare.PageRule(
     target=pulumi.Output.format("{}.{}", config.require("hostname"), global_stack.get_output("domain")),
     zone_id=global_stack.get_output("cloudflare_zone_id"),
 )
+
+# Only one of the stacks need to deploy the secrets, as they go to the same repository.
+if pulumi.get_stack() == "prod":
+    pulumi_github.ActionsSecret(
+        "github-secret-nomad-cloudflare-access-id",
+        repository="TrueWiki",
+        secret_name="NOMAD_CF_ACCESS_CLIENT_ID",
+        plaintext_value=cloudflare_core_stack.get_output("service_token_id"),
+    )
+
+    pulumi_github.ActionsSecret(
+        "github-secret-nomad-cloudflare-access-secret",
+        repository="TrueWiki",
+        secret_name="NOMAD_CF_ACCESS_CLIENT_SECRET",
+        plaintext_value=cloudflare_core_stack.get_output("service_token_secret"),
+    )

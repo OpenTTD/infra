@@ -11,3 +11,4 @@ config:
   app-wiki:user-github-client-id: 943e54308c34b4c4dfaf
   app-wiki:user-github-client-secret:
     secure: AAABANl+qWSn/tHoCU1zfoz3RfG/dj3tAbeuP19Y5ZuO31DHD852e3jI3zOR8+ibv9Uq0A5b0YKssQiOR26/l1gcvhBTb0J4
+  github:owner: TrueBrain
