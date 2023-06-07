@@ -67,6 +67,7 @@ job "wiki-[[ stack ]]" {
           "--storage-github-api-url", "https://github-api-proxy.openttd.org",
           "--storage-folder", "/data",
           "--frontend-url", "[[ frontend_url ]]",
+          "--remote-ip-header", "cf-connecting-ip",
           "--user", "github",
           "--user-github-api-url", "https://github-api-proxy.openttd.org",
           "--user-github-url", "https://github-proxy.openttd.org",
