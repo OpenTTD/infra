@@ -12,7 +12,6 @@ In this repository are several [Pulumi](pulumi.com/) projects that combined decl
   - `export NOMAD_ADDR=http://127.0.0.1:4646`
   - `export AWS_PROFILE=openttd`
   - `export AWS_REGION=eu-west-1`
-  - `export GITHUB_OWNER=OpenTTD`
 
 ## Usage
 

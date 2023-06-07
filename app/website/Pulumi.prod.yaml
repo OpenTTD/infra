@@ -1,3 +1,4 @@
 config:
   app-website:hostname: www
   app-website:name: openttd-website
+  github:owner: OpenTTD
