@@ -1,0 +1,6 @@
+name: app-bananas
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - BaNaNaS

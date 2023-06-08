@@ -1,0 +1,8 @@
+config:
+  app-bananas:hostname: bananas
+  app-bananas:index-github-url: https://github-proxy.openttd.org/OpenTTD/BaNaNaS
+  app-bananas:sentry-environment: production
+  app-bananas:server-content-port: "11011"
+  app-bananas:server-memory: "256"
+  app-bananas:server-web-port: "11010"
+  github:owner: OpenTTD
