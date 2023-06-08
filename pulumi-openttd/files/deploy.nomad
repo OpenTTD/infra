@@ -1,4 +1,4 @@
-job "wiki-[[ stack ]]-deploy" {
+job "[[ service ]]-[[ stack ]]-deploy" {
   datacenters = ["dc1"]
 
   type = "batch"
@@ -27,7 +27,7 @@ job "wiki-[[ stack ]]-deploy" {
       config {
         command = "local/deploy.py"
         args = [
-          "wiki",
+          "[[ service ]]",
           "[[ stack ]]",
           "${NOMAD_META_version}",
         ]

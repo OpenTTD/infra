@@ -1,11 +1,7 @@
-import base64
 import pulumi
 import pulumi_cloudflare
-import pulumi_github
-import pulumi_nomad
 import pulumi_random
 import pulumi_openttd
-import pulumiverse_sentry
 
 
 config = pulumi.Config()
@@ -22,18 +18,8 @@ reload_secret = pulumi_random.RandomString(
     special=False,
 )
 frontend_url = pulumi.Output.format("https://{}.{}", config.require("hostname"), global_stack.get_output("domain"))
-sentry_key = pulumiverse_sentry.get_sentry_key(
-    organization="openttd",
-    project="wiki",
-)
-
-# sentry.io doesn't support IPv6, so we route it via our own domain.
-sentry_key = pulumi.Output.all(
-    sentry_ingest_hostname=global_stack.get_output("sentry_ingest_hostname"),
-    sentry_key=sentry_key.dsn_public,
-    domain=global_stack.get_output("domain"),
-).apply(
-    lambda args: args["sentry_key"].replace(args["sentry_ingest_hostname"], f"sentry-ingest.{args['domain']}")
+sentry_key = pulumi_openttd.get_sentry_key(
+    "wiki", global_stack.get_output("sentry_ingest_hostname"), global_stack.get_output("domain")
 )
 
 SETTINGS = {
@@ -60,59 +46,16 @@ volume = pulumi_openttd.VolumeEfs(
     ),
 )
 
-variables = {}
-for key, value in SETTINGS.items():
-    variables[key] = pulumi_openttd.NomadVariable(
-        f"setting-{key}",
-        pulumi_openttd.NomadVariableArgs(
-            path=f"app/wiki-{pulumi.get_stack()}/settings",
-            name=key,
-            value=value,
-            overwrite_if_exists=True,
-        ),
-    )
-
-variables["version"] = pulumi_openttd.NomadVariable(
-    "version",
-    pulumi_openttd.NomadVariableArgs(
-        path=f"app/wiki-{pulumi.get_stack()}/version",
-        name="version",
-        value=":dev",  # Just the initial value.
-        overwrite_if_exists=False,
+pulumi_openttd.NomadService(
+    "wiki",
+    pulumi_openttd.NomadServiceArgs(
+        service="wiki",
+        settings=SETTINGS,
+        dependencies=[volume],
+        service_token_id=cloudflare_core_stack.get_output("service_token_id"),
+        service_token_secret=cloudflare_core_stack.get_output("service_token_secret"),
+        repository="TrueWiki",
     ),
-)
-
-jobspec = open("files/wiki.nomad", "rb").read()
-pulumi_openttd.NomadVariable(
-    f"jobspec",
-    pulumi_openttd.NomadVariableArgs(
-        path=f"app/wiki-{pulumi.get_stack()}/jobspec",
-        name="jobspec",
-        value=base64.b64encode(jobspec).decode(),
-        overwrite_if_exists=True,
-    ),
-)
-
-job = pulumi_nomad.Job(
-    "job",
-    jobspec=pulumi_openttd.get_jobspec(jobspec.decode(), variables),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
-    purge_on_destroy=True,
-    opts=pulumi.ResourceOptions(depends_on=[volume, *variables.values()]),
-)
-
-jobspec_deploy = open("files/deploy.nomad", "rb").read().decode()
-jobspec_deploy = jobspec_deploy.replace("[[ stack ]]", pulumi.get_stack())
-
-job = pulumi_nomad.Job(
-    "job-deploy",
-    jobspec=jobspec_deploy,
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
-    purge_on_destroy=True,
 )
 
 pulumi_cloudflare.PageRule(
@@ -123,19 +66,3 @@ pulumi_cloudflare.PageRule(
     target=pulumi.Output.format("{}.{}/*", config.require("hostname"), global_stack.get_output("domain")),
     zone_id=global_stack.get_output("cloudflare_zone_id"),
 )
-
-# Only one of the stacks need to deploy the secrets, as they go to the same repository.
-if pulumi.get_stack() == "prod":
-    pulumi_github.ActionsSecret(
-        "github-secret-nomad-cloudflare-access-id",
-        repository="TrueWiki",
-        secret_name="NOMAD_CF_ACCESS_CLIENT_ID",
-        plaintext_value=cloudflare_core_stack.get_output("service_token_id"),
-    )
-
-    pulumi_github.ActionsSecret(
-        "github-secret-nomad-cloudflare-access-secret",
-        repository="TrueWiki",
-        secret_name="NOMAD_CF_ACCESS_CLIENT_SECRET",
-        plaintext_value=cloudflare_core_stack.get_output("service_token_secret"),
-    )
