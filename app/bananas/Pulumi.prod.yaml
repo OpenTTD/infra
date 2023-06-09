@@ -1,10 +1,14 @@
 config:
-  app-bananas:api-memory: "256"
   app-bananas:api-client-file: "production"
+  app-bananas:api-memory: "256"
+  app-bananas:api-tusd-port: "11012"
+  app-bananas:api-web-port: "11013"
   app-bananas:hostname: bananas
   app-bananas:index-github-url: https://github-proxy.openttd.org/OpenTTD/BaNaNaS
   app-bananas:sentry-environment: production
   app-bananas:server-content-port: "11011"
   app-bananas:server-memory: "256"
   app-bananas:server-web-port: "11010"
+  app-bananas:web-memory: "64"
+  app-bananas:web-port: "11014"
   github:owner: OpenTTD

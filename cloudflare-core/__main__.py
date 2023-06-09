@@ -15,6 +15,7 @@ ROUTE_MAPPING = {
     "12010": (True, "bananas-preview-server", None),
     "12012": (True, "bananas-preview-api", "/new-package/tus/*"),
     "12013": (True, "bananas-preview-api", None),
+    "12014": (True, "bananas-preview", None),
 }
 
 proxy.Proxy(

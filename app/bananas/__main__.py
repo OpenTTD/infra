@@ -5,6 +5,7 @@ import pulumi_openttd
 import api
 import cdn
 import server
+import web
 
 
 config = pulumi.Config()
@@ -41,7 +42,7 @@ server.Server(
     ),
 )
 
-api = api.Api(
+api.Api(
     "api",
     api.ApiArgs(
         client_file=config.require("api-client-file"),
@@ -64,19 +65,16 @@ api = api.Api(
     ),
 )
 
-# Temporary till all these have their own stack.
-if pulumi.get_stack() == "prod":
-    for repository in ("bananas-api", "bananas-frontend-web"):
-        pulumi_github.ActionsSecret(
-            f"github-secret-{repository}-nomad-cloudflare-access-id",
-            repository=repository,
-            secret_name="NOMAD_CF_ACCESS_CLIENT_ID",
-            plaintext_value=cloudflare_core_stack.get_output("service_token_id"),
-        )
-
-        pulumi_github.ActionsSecret(
-            f"github-secret-{repository}-nomad-cloudflare-access-secret",
-            repository=repository,
-            secret_name="NOMAD_CF_ACCESS_CLIENT_SECRET",
-            plaintext_value=cloudflare_core_stack.get_output("service_token_secret"),
-        )
+web.Web(
+    "web",
+    web.WebArgs(
+        domain=global_stack.get_output("domain"),
+        hostname=config.require("hostname"),
+        memory=config.require("web-memory"),
+        port=config.require("web-port"),
+        sentry_environment=config.require("sentry-environment"),
+        sentry_ingest_hostname=global_stack.get_output("sentry_ingest_hostname"),
+        service_token_id=cloudflare_core_stack.get_output("service_token_id"),
+        service_token_secret=cloudflare_core_stack.get_output("service_token_secret"),
+    ),
+)

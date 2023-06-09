@@ -91,6 +91,8 @@ job "bananas-api-[[ stack ]]" {
           "--index-github-api-url", "https://github-api-proxy.openttd.org",
           "--client-file", "[[ client_file ]]",
           "--user", "github",
+          "--user-github-api-url", "https://github-api-proxy.openttd.org",
+          "--user-github-url", "https://github-proxy.openttd.org",
           "--behind-proxy",
         ]
         network_mode = "bridge"
