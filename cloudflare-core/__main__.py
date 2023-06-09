@@ -7,11 +7,14 @@ config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 aws_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/prod")
 
-# Port -> (Public, Subdomain)
+# Port -> (Public, Subdomain, Path)
 ROUTE_MAPPING = {
-    "8646": (False, "nomad"),
-    "11000": (True, "wiki"),
-    "12000": (True, "wiki-preview"),
+    "8646": (False, "nomad", None),
+    "11000": (True, "wiki", None),
+    "12000": (True, "wiki-preview", None),
+    "12010": (True, "bananas-preview-server", None),
+    "12012": (True, "bananas-preview-api", "/new-package/tus/*"),
+    "12013": (True, "bananas-preview-api", None),
 }
 
 proxy.Proxy(
@@ -74,12 +77,13 @@ t = tunnel.Tunnel(
     ),
 )
 
-for port, (public, name) in ROUTE_MAPPING.items():
+for port, (public, name, path) in ROUTE_MAPPING.items():
     t.add_route(
         tunnel.TunnelRoute(
             name=name,
             hostname=pulumi.Output.all(name=name, domain=global_stack.get_output("domain")).apply(lambda args: f"{args['name']}.{args['domain']}"),
             service=f"http://127.0.0.1:{port}",
+            path=path,
             protect=not public,
             allow_service_token=not public,
         )

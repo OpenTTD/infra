@@ -1,4 +1,6 @@
 config:
+  app-bananas:api-memory: "256"
+  app-bananas:api-client-file: "production"
   app-bananas:hostname: bananas
   app-bananas:index-github-url: https://github-proxy.openttd.org/OpenTTD/BaNaNaS
   app-bananas:sentry-environment: production

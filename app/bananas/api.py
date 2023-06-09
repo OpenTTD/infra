@@ -8,11 +8,12 @@ from dataclasses import dataclass
 
 
 @dataclass
-class ServerArgs:
-    content_port: str
+class ApiArgs:
+    client_file: str
     cloudflare_account_id: str
     domain: str
-    hostname: str
+    index_github_app_id: str
+    index_github_app_key: str
     index_github_url: str
     memory: str
     s3_bucket: str
@@ -21,12 +22,16 @@ class ServerArgs:
     sentry_ingest_hostname: str
     service_token_id: str
     service_token_secret: str
+    tusd_port: str
+    user_github_client_id: str
+    user_github_client_secret: str
     web_port: str
 
 
-class Server(pulumi.ComponentResource):
-    def __init__(self, name, args: ServerArgs, opts: pulumi.ResourceOptions = None):
-        super().__init__("app:bananas:server", name, None, opts)
+
+class Api(pulumi.ComponentResource):
+    def __init__(self, name, args: ApiArgs, opts: pulumi.ResourceOptions = None):
+        super().__init__("app:bananas:api", name, None, opts)
 
         permission_groups = pulumi_cloudflare.get_api_token_permission_groups()
         resources = args.cloudflare_account_id.apply(
@@ -34,37 +39,29 @@ class Server(pulumi.ComponentResource):
         )
 
         api_token = pulumi_cloudflare.ApiToken(
-            "server-api-token",
-            name="app/bananas-server",
+            "api-api-token",
+            name="app/bananas-api",
             policies=[
                 pulumi_cloudflare.ApiTokenPolicyArgs(
                     resources=resources,
                     permission_groups=[
-                        permission_groups.account["Workers R2 Storage Read"],
+                        permission_groups.account["Workers R2 Storage Write"],
                     ],
                 ),
             ],
         )
 
         reload_secret = pulumi_random.RandomString(
-            "server-reload-secret",
+            "api-reload-secret",
             length=32,
             special=False,
         )
-        cdn_fallback_url = pulumi.Output.format("https://{}-cdn.{}", args.hostname, args.domain)
-        sentry_key = pulumi_openttd.get_sentry_key("bananas-server", args.sentry_ingest_hostname, args.domain)
-
-        # For production, make sure the bootstrap request returns OpenGFX.
-        if pulumi.get_stack() == "prod":
-            boostrap_command = '"--bootstrap-unique-id", "4f474658",'
-        else:
-            boostrap_command = ""
+        sentry_key = pulumi_openttd.get_sentry_key("bananas-api", args.sentry_ingest_hostname, args.domain)
 
         SETTINGS = {
-            "bootstrap_command": boostrap_command,
-            "cdn_fallback_url": cdn_fallback_url,
-            "content_port": args.content_port,
-            "count": "1" if pulumi.get_stack() == "preview" else "2",
+            "client_file": f"clients-{args.client_file}.yaml",
+            "index_github_app_id": args.index_github_app_id,
+            "index_github_app_key": args.index_github_app_key,
             "index_github_url": args.index_github_url,
             "memory": args.memory,
             "reload_secret": reload_secret.result,
@@ -75,18 +72,21 @@ class Server(pulumi.ComponentResource):
             "storage_s3_bucket": args.s3_bucket,
             "storage_s3_endpoint_url": args.s3_endpoint_url,
             "storage_s3_secret_access_key": api_token.value.apply(lambda secret: hashlib.sha256(secret.encode()).hexdigest()),
+            "tusd_port": args.tusd_port,
+            "user_github_client_id": args.user_github_client_id,
+            "user_github_client_secret": args.user_github_client_secret,
             "web_port": args.web_port,
         }
 
         pulumi_openttd.NomadService(
-            "server",
+            "api",
             pulumi_openttd.NomadServiceArgs(
                 dependencies=[],
-                prefix="server-",
-                repository="bananas-server",
+                prefix="api-",
+                repository="bananas-api",
                 service_token_id=args.service_token_id,
                 service_token_secret=args.service_token_secret,
-                service="bananas-server",
+                service="bananas-api",
                 settings=SETTINGS,
             ),
         )

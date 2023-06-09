@@ -1,14 +1,15 @@
-job "bananas-server-[[ stack ]]" {
+job "bananas-api-[[ stack ]]" {
   datacenters = ["dc1"]
   type = "service"
 
-  group "bananas-server" {
-    count = [[ count ]]
+  group "bananas-api" {
+    # The api is stateful; as such, we can only run one container.
+    count = 1
 
     network {
       mode = "host"
       port "http" { to = 80 }
-      port "content" { to = 3978 }
+      port "tusd" { to = 1080 }
     }
 
     update {
@@ -22,7 +23,7 @@ job "bananas-server-[[ stack ]]" {
       driver = "docker"
 
       service {
-        name = "bananas-server-[[ stack ]]-web"
+        name = "bananas-api-[[ stack ]]-web"
         port = "http"
         provider = "nomad"
 
@@ -49,12 +50,12 @@ job "bananas-server-[[ stack ]]" {
       }
 
       service {
-        name = "bananas-server-[[ stack ]]-content"
-        port = "content"
+        name = "bananas-api-[[ stack ]]-tusd"
+        port = "tusd"
         provider = "nomad"
 
         tags = [
-          "port=[[ content_port ]]"
+          "port=[[ tusd_port ]]"
         ]
         canary_tags = [
           "canary"
@@ -77,7 +78,7 @@ job "bananas-server-[[ stack ]]" {
       }
 
       config {
-        image = "ghcr-proxy.openttd.org/openttd/bananas-server[[ version ]]"
+        image = "ghcr-proxy.openttd.org/openttd/bananas-api[[ version ]]"
         args = [
           "--bind", "::",
           "--bind", "0.0.0.0",
@@ -87,20 +88,27 @@ job "bananas-server-[[ stack ]]" {
           "--storage-s3-endpoint-url", "[[ storage_s3_endpoint_url ]]",
           "--index", "github",
           "--index-github-url", "[[ index_github_url ]]",
-          "--cdn-fallback-url", "[[ cdn_fallback_url ]]",
-          "--proxy-protocol",
-          [[ bootstrap_command ]]
+          "--index-github-api-url", "https://github-api-proxy.openttd.org",
+          "--client-file", "[[ client_file ]]",
+          "--user", "github",
+          "--behind-proxy",
         ]
         network_mode = "bridge"
         advertise_ipv6_address = true
-        ports = ["http", "content"]
+        ports = ["http", "tusd"]
       }
 
       env {
-        BANANAS_SERVER_RELOAD_SECRET = "[[ reload_secret ]]"
+        BANANAS_API_RELOAD_SECRET = "[[ reload_secret ]]"
 
-        BANANAS_SERVER_SENTRY_DSN = "[[ sentry_dsn ]]"
-        BANANAS_SERVER_SENTRY_ENVIRONMENT = "[[ sentry_environment ]]"
+        BANANAS_API_SENTRY_DSN = "[[ sentry_dsn ]]"
+        BANANAS_API_SENTRY_ENVIRONMENT = "[[ sentry_environment ]]"
+
+        BANANAS_API_USER_GITHUB_CLIENT_ID = "[[ user_github_client_id ]]"
+        BANANAS_API_USER_GITHUB_CLIENT_SECRET = "[[ user_github_client_secret ]]"
+
+        BANANAS_API_INDEX_GITHUB_APP_ID = "[[ index_github_app_id ]]"
+        BANANAS_API_INDEX_GITHUB_APP_KEY = "[[ index_github_app_key ]]"
 
         AWS_ACCESS_KEY_ID = "[[ storage_s3_access_key_id ]]"
         AWS_SECRET_ACCESS_KEY = "[[ storage_s3_secret_access_key ]]"

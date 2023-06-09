@@ -16,6 +16,7 @@ class NomadServiceArgs:
     service_token_id: str
     service_token_secret: str
     repository: str
+    prefix: str = ""
 
 
 class NomadService(pulumi.ComponentResource):
@@ -29,7 +30,7 @@ class NomadService(pulumi.ComponentResource):
         variables = {}
         for key, value in args.settings.items():
             variables[key] = pulumi_openttd.NomadVariable(
-                f"setting-{key}",
+                f"{args.prefix}setting-{key}",
                 pulumi_openttd.NomadVariableArgs(
                     path=f"app/{args.service}-{pulumi.get_stack()}/settings",
                     name=key,
@@ -40,7 +41,7 @@ class NomadService(pulumi.ComponentResource):
             )
 
         variables["version"] = pulumi_openttd.NomadVariable(
-            "version",
+            f"{args.prefix}version",
             pulumi_openttd.NomadVariableArgs(
                 path=f"app/{args.service}-{pulumi.get_stack()}/version",
                 name="version",
@@ -52,7 +53,7 @@ class NomadService(pulumi.ComponentResource):
 
         jobspec = open(f"files/{args.service}.nomad", "rb").read()
         pulumi_openttd.NomadVariable(
-            f"jobspec",
+            f"{args.prefix}jobspec",
             pulumi_openttd.NomadVariableArgs(
                 path=f"app/{args.service}-{pulumi.get_stack()}/jobspec",
                 name="jobspec",
@@ -63,7 +64,7 @@ class NomadService(pulumi.ComponentResource):
         )
 
         pulumi_nomad.Job(
-            "job",
+            f"{args.prefix}job",
             jobspec=pulumi_openttd.get_jobspec(jobspec.decode(), variables),
             hcl2=pulumi_nomad.JobHcl2Args(
                 enabled=True,
@@ -79,7 +80,7 @@ class NomadService(pulumi.ComponentResource):
         )
 
         pulumi_nomad.Job(
-            "job-deploy",
+            f"{args.prefix}job-deploy",
             jobspec=jobspec_deploy,
             hcl2=pulumi_nomad.JobHcl2Args(
                 enabled=True,
@@ -91,7 +92,7 @@ class NomadService(pulumi.ComponentResource):
         # Only one of the stacks need to deploy the secrets, as they go to the same repository.
         if pulumi.get_stack() == "prod":
             pulumi_github.ActionsSecret(
-                "github-secret-nomad-cloudflare-access-id",
+                f"{args.prefix}github-secret-nomad-cloudflare-access-id",
                 repository=args.repository,
                 secret_name="NOMAD_CF_ACCESS_CLIENT_ID",
                 plaintext_value=args.service_token_id,
@@ -99,7 +100,7 @@ class NomadService(pulumi.ComponentResource):
             )
 
             pulumi_github.ActionsSecret(
-                "github-secret-nomad-cloudflare-access-secret",
+                f"{args.prefix}github-secret-nomad-cloudflare-access-secret",
                 repository=args.repository,
                 secret_name="NOMAD_CF_ACCESS_CLIENT_SECRET",
                 plaintext_value=args.service_token_secret,

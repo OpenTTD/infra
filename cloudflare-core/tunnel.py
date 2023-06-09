@@ -19,6 +19,7 @@ class TunnelArgs:
 class TunnelRoute:
     name: str
     hostname: str
+    path: str
     service: str
     protect: bool = False
     allow_service_token: bool = False
@@ -107,18 +108,20 @@ class Tunnel(pulumi.ComponentResource):
                 pulumi_cloudflare.TunnelConfigConfigIngressRuleArgs(
                     hostname=route.hostname,
                     service=route.service,
+                    path=route.path,
                 )
             )
 
-            pulumi_cloudflare.Record(
-                f"{self._name}-app-{route.name}-dns",
-                name=route.hostname,
-                proxied=True,
-                type="CNAME",
-                value=self.tunnel.cname,
-                zone_id=self.zone_id,
-                opts=pulumi.ResourceOptions(parent=self),
-            )
+            if route.path is None:
+                pulumi_cloudflare.Record(
+                    f"{self._name}-app-{route.name}-dns",
+                    name=route.hostname,
+                    proxied=True,
+                    type="CNAME",
+                    value=self.tunnel.cname,
+                    zone_id=self.zone_id,
+                    opts=pulumi.ResourceOptions(parent=self),
+                )
 
             if route.protect:
                 application = pulumi_cloudflare.AccessApplication(
