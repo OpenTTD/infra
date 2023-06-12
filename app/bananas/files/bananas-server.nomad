@@ -54,7 +54,8 @@ job "bananas-server-[[ stack ]]" {
         provider = "nomad"
 
         tags = [
-          "port=[[ content_port ]]"
+          "port=[[ content_port ]]",
+          "public=[[ content_public_port ]]"
         ]
         canary_tags = [
           "canary"

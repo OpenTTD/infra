@@ -10,7 +10,9 @@ class NomadArgs:
     console_password: pulumi.Output[str]
     instance_type: str
     is_public: bool
+    security_groups: list[str]
     subnets: list[str]
+    vpc_id: str
 
 
 class Nomad(pulumi.ComponentResource):
@@ -33,8 +35,12 @@ class Nomad(pulumi.ComponentResource):
 
 echo 'ec2-user:{password}' | chpasswd
 
-# Set an IPv6 address so we can talk to the outside world.
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+INSTANCE=$(curl -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/instance-id)
+
+aws autoscaling set-instance-health --instance-id ${{INSTANCE}} --health-status Unhealthy
+
+# Set an IPv6 address so we can talk to the outside world.
 MAC=$(curl -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/)
 PREFIX=$(curl --fail -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${{MAC}}ipv6-prefix)
 ip -6 addr add $(echo ${{PREFIX}} | sed 's@:0:0:0/80@:0:0:1/128@') dev ens5
@@ -55,9 +61,9 @@ dnf install -y nomad
 
 pip install aiohttp
 
-curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-{'public' if args.is_public else 'private'}.hcl -o /etc/nomad.d/nomad.hcl
+curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-{'public' if args.is_public else 'dc1'}.hcl -o /etc/nomad.d/nomad.hcl
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.service -o /etc/systemd/system/nomad.service
-if [ -n "{'' if args.is_public else 'private'}" ]; then
+if [ -n "{'' if args.is_public else 'server'}" ]; then
     curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.service -o /etc/systemd/system/nomad-proxy.service
     curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.py -o /usr/bin/nomad-proxy
     chmod +x /usr/bin/nomad-proxy
@@ -69,8 +75,13 @@ systemctl enable rc-local
 systemctl start rc-local
 systemctl enable nomad
 systemctl start nomad
-systemctl enable nomad-proxy
-systemctl start nomad-proxy
+if [ -n "{'' if args.is_public else 'server'}" ]; then
+    systemctl enable nomad-proxy
+    systemctl start nomad-proxy
+fi
+
+aws autoscaling set-instance-health --instance-id ${{INSTANCE}} --health-status Healthy
+aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id ${{INSTANCE}} --lifecycle-hook-name installed --auto-scaling-group-name nomad{'-public' if args.is_public else ''}-asg
 """
         )
 
@@ -80,7 +91,11 @@ systemctl start nomad-proxy
             policy=pulumi_aws.iam.get_policy_document(
                 statements=[
                     pulumi_aws.iam.GetPolicyDocumentStatementArgs(
-                        actions=["ec2:DescribeInstances"],
+                        actions=[
+                            "ec2:DescribeInstances",
+                            "autoscaling:SetInstanceHealth",
+                            "autoscaling:CompleteLifecycleAction",
+                        ],
                         resources=["*"],
                         effect="Allow",
                     ),
@@ -140,6 +155,7 @@ systemctl start nomad-proxy
                     associate_public_ip_address=args.is_public,
                     device_index=0,
                     ipv6_prefix_count=1,
+                    security_groups=args.security_groups,
                 ),
             ],
             tag_specifications=[
@@ -155,9 +171,8 @@ systemctl start nomad-proxy
             opts=pulumi.ResourceOptions(parent=self),
         )
 
-        pulumi_aws.autoscaling.Group(
+        asg = pulumi_aws.autoscaling.Group(
             f"{name}-asg",
-            desired_capacity=len(args.subnets),
             health_check_grace_period=30,
             health_check_type="EC2",
             launch_template=pulumi_aws.autoscaling.GroupLaunchTemplateArgs(
@@ -185,6 +200,15 @@ systemctl start nomad-proxy
             ],
             vpc_zone_identifiers=args.subnets,
             opts=pulumi.ResourceOptions(parent=self),
+        )
+
+        pulumi_aws.autoscaling.LifecycleHook(
+            f"{name}-lifecycle-hook",
+            autoscaling_group_name=asg.name,
+            default_result="ABANDON",
+            heartbeat_timeout=300,
+            lifecycle_transition="autoscaling:EC2_INSTANCE_LAUNCHING",
+            name="installed",
         )
 
         self.register_outputs({})

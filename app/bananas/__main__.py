@@ -30,6 +30,7 @@ server.Server(
     "server",
     server.ServerArgs(
         content_port=config.require("server-content-port"),
+        content_public_port=config.require("server-content-public-port"),
         cloudflare_account_id=global_stack.get_output("cloudflare_account_id"),
         domain=global_stack.get_output("domain"),
         hostname=config.require("hostname"),

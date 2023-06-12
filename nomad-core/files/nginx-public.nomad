@@ -1,5 +1,5 @@
-job "nginx" {
-  datacenters = ["dc1"]
+job "nginx-public" {
+  datacenters = ["public"]
 
   type = "system"
 
@@ -64,14 +64,17 @@ EOT
 
 {{- define "getPort" -}}
   {{- range . -}}
-    {{- if . | regexMatch "port=[0-9]+" -}}
-      {{ . | trimPrefix "port=" }}
+    {{- if . | regexMatch "public=[0-9]+" -}}
+      {{ . | trimPrefix "public=" }}
     {{- end -}}
   {{- end -}}
 {{- end -}}
 
 stream {
 {{- range nomadServices }}
+{{- $port := executeTemplate "getPort" .Tags }}
+
+{{- if $port }}
   upstream {{ .Name | toLower }} {
     hash $remote_addr;
 
@@ -83,17 +86,12 @@ stream {
 {{- end }}
   }
 
-{{- $port := executeTemplate "getPort" .Tags }}
-
   server {
     listen {{ $port }} {{- if in .Tags "protocol=udp" -}}udp{{- end -}};
     listen [::]:{{ $port }} {{- if in .Tags "protocol=udp" -}}udp{{- end -}};
 
     proxy_pass {{ .Name | toLower }};
-
-    {{- if in .Tags "proxy-protocol" }}
-      proxy_protocol on;
-    {{- end }}
+    proxy_protocol on;
 
     {{- if in .Tags "protocol=udp" }}
       proxy_requests 1;
@@ -101,6 +99,7 @@ stream {
     {{- end }}
   }
 
+{{ end }}
 {{- end }}
 }
 EOF

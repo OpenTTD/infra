@@ -13,6 +13,7 @@ config:
   app-bananas:index-github-url: https://github-proxy.openttd.org/OpenTTD/BaNaNaS-staging
   app-bananas:sentry-environment: preview
   app-bananas:server-content-port: "12011"
+  app-bananas:server-content-public-port: "4978"
   app-bananas:server-memory: "128"
   app-bananas:server-web-port: "12010"
   app-bananas:web-memory: "64"

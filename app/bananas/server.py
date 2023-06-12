@@ -10,6 +10,7 @@ from dataclasses import dataclass
 @dataclass
 class ServerArgs:
     content_port: str
+    content_public_port: str
     cloudflare_account_id: str
     domain: str
     hostname: str
@@ -64,6 +65,7 @@ class Server(pulumi.ComponentResource):
             "bootstrap_command": boostrap_command,
             "cdn_fallback_url": cdn_fallback_url,
             "content_port": args.content_port,
+            "content_public_port": args.content_public_port,
             "count": "1" if pulumi.get_stack() == "preview" else "2",
             "index_github_url": args.index_github_url,
             "memory": args.memory,

@@ -2,6 +2,8 @@ data_dir = "/opt/nomad/data"
 bind_addr = "0.0.0.0"
 disable_update_check = true
 
+datacenter = "dc1"
+
 server {
   enabled = true
   bootstrap_expect = 3
