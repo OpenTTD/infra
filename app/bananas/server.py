@@ -74,7 +74,9 @@ class Server(pulumi.ComponentResource):
             "storage_s3_access_key_id": api_token.id,
             "storage_s3_bucket": args.s3_bucket,
             "storage_s3_endpoint_url": args.s3_endpoint_url,
-            "storage_s3_secret_access_key": api_token.value.apply(lambda secret: hashlib.sha256(secret.encode()).hexdigest()),
+            "storage_s3_secret_access_key": api_token.value.apply(
+                lambda secret: hashlib.sha256(secret.encode()).hexdigest()
+            ),
             "web_port": args.web_port,
         }
 

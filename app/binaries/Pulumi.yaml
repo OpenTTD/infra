@@ -1,0 +1,6 @@
+name: app-binaries
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - binaries

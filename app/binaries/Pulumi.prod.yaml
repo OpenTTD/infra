@@ -1,0 +1,3 @@
+config:
+  app-binaries:hostname: binaries
+  app-binaries:bananas_hostname: bananas

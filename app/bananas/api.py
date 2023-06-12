@@ -28,7 +28,6 @@ class ApiArgs:
     web_port: str
 
 
-
 class Api(pulumi.ComponentResource):
     def __init__(self, name, args: ApiArgs, opts: pulumi.ResourceOptions = None):
         super().__init__("app:bananas:api", name, None, opts)
@@ -71,7 +70,9 @@ class Api(pulumi.ComponentResource):
             "storage_s3_access_key_id": api_token.id,
             "storage_s3_bucket": args.s3_bucket,
             "storage_s3_endpoint_url": args.s3_endpoint_url,
-            "storage_s3_secret_access_key": api_token.value.apply(lambda secret: hashlib.sha256(secret.encode()).hexdigest()),
+            "storage_s3_secret_access_key": api_token.value.apply(
+                lambda secret: hashlib.sha256(secret.encode()).hexdigest()
+            ),
             "tusd_port": args.tusd_port,
             "user_github_client_id": args.user_github_client_id,
             "user_github_client_secret": args.user_github_client_secret,

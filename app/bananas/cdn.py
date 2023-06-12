@@ -33,10 +33,12 @@ class Cdn(pulumi.ComponentResource):
             content=open(f"files/cfw-cdn.js").read(),
             name=name,
             module=True,
-            r2_bucket_bindings=[pulumi_cloudflare.WorkerScriptR2BucketBindingArgs(
-                name="BUCKET_CDN",
-                bucket_name=self.bucket_name,
-            )],
+            r2_bucket_bindings=[
+                pulumi_cloudflare.WorkerScriptR2BucketBindingArgs(
+                    name="BUCKET_CDN",
+                    bucket_name=self.bucket_name,
+                )
+            ],
             opts=pulumi.ResourceOptions(parent=self),
         )
 

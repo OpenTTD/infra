@@ -10,11 +10,13 @@ config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 aws_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/prod")
 
+
 @dataclass
 class RouteMappingArgs:
     subdomain: str
     protected: bool = False
     path: str = None
+
 
 # Port -> (Public, Subdomain, Path)
 ROUTE_MAPPING = {
@@ -22,7 +24,6 @@ ROUTE_MAPPING = {
     "11000": RouteMappingArgs(subdomain="wiki"),
     "12000": RouteMappingArgs(subdomain="wiki-preview"),
     "12010": RouteMappingArgs(subdomain="bananas-preview-server"),
-    # "12010": RouteMappingArgs(subdomain="binaries-preview", path="/bananas"),
     "12012": RouteMappingArgs(subdomain="bananas-preview-api", path="/new-package/tus/*"),
     "12013": RouteMappingArgs(subdomain="bananas-preview-api"),
     "12014": RouteMappingArgs(subdomain="bananas-preview"),
@@ -30,13 +31,18 @@ ROUTE_MAPPING = {
 
 # Subdomains where HTTP is allowed.
 # Old OpenTTD clients didn't have HTTPS support, as such, there are some
-# subdomains where HTTP is required.
+# subdomains where HTTP is still required.
 HTTP_ALLOWED = [
     "bananas-preview-cdn",
+    "binaries-preview",
 ]
 
-HTTP_ALLOWED_FQDN = global_stack.get_output("domain").apply(lambda domain: [f'"{subdomain}.{domain}"' for subdomain in HTTP_ALLOWED])
-http_redirect_expression = HTTP_ALLOWED_FQDN.apply(lambda fqdns: f"(not ssl and http.host ne {' and http.host ne '.join(fqdns)})")
+HTTP_ALLOWED_FQDN = global_stack.get_output("domain").apply(
+    lambda domain: [f'"{subdomain}.{domain}"' for subdomain in HTTP_ALLOWED]
+)
+http_redirect_expression = HTTP_ALLOWED_FQDN.apply(
+    lambda fqdns: f"(not ssl and http.host ne {' and http.host ne '.join(fqdns)})"
+)
 
 pulumi_cloudflare.Ruleset(
     "http-redirect-ruleset",
@@ -126,7 +132,9 @@ for port, route in ROUTE_MAPPING.items():
     t.add_route(
         tunnel.TunnelRoute(
             name=route.subdomain,
-            hostname=pulumi.Output.all(name=route.subdomain, domain=global_stack.get_output("domain")).apply(lambda args: f"{args['name']}.{args['domain']}"),
+            hostname=pulumi.Output.all(name=route.subdomain, domain=global_stack.get_output("domain")).apply(
+                lambda args: f"{args['name']}.{args['domain']}"
+            ),
             service=f"http://127.0.0.1:{port}",
             path=route.path,
             protect=route.protected,
