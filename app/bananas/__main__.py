@@ -20,6 +20,9 @@ cdn = cdn.Cdn(
     "cdn",
     cdn.CdnArgs(
         cloudflare_account_id=global_stack.get_output("cloudflare_account_id"),
+        cloudflare_zone_id=global_stack.get_output("cloudflare_zone_id"),
+        domain=global_stack.get_output("domain"),
+        hostname=config.require("hostname"),
     ),
 )
 

@@ -1,7 +1,5 @@
 import pulumi
 import pulumi_cloudflare
-import pulumi_random
-import pulumi_openttd
 
 from dataclasses import dataclass
 
@@ -9,6 +7,9 @@ from dataclasses import dataclass
 @dataclass
 class CdnArgs:
     cloudflare_account_id: str
+    cloudflare_zone_id: str
+    domain: str
+    hostname: str
 
 
 class Cdn(pulumi.ComponentResource):
@@ -24,5 +25,28 @@ class Cdn(pulumi.ComponentResource):
 
         self.bucket_name = f"bananas-{pulumi.get_stack()}"
         self.bucket_endpoint_url = "https://656eb7bf45569b729d05c1da49dfde7c.r2.cloudflarestorage.com"
+
+        name = f"bananas-cdn-{pulumi.get_stack()}"
+        worker = pulumi_cloudflare.WorkerScript(
+            f"worker",
+            account_id=args.cloudflare_account_id,
+            content=open(f"files/cfw-cdn.js").read(),
+            name=name,
+            module=True,
+            r2_bucket_bindings=[pulumi_cloudflare.WorkerScriptR2BucketBindingArgs(
+                name="BUCKET_CDN",
+                bucket_name=self.bucket_name,
+            )],
+            opts=pulumi.ResourceOptions(parent=self),
+        )
+
+        pulumi_cloudflare.WorkerDomain(
+            f"worker-domain",
+            account_id=args.cloudflare_account_id,
+            hostname=pulumi.Output.format("{}-cdn.{}", args.hostname, args.domain),
+            service=name,
+            zone_id=args.cloudflare_zone_id,
+            opts=pulumi.ResourceOptions(parent=worker),
+        )
 
         self.register_outputs({})

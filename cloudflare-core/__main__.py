@@ -1,4 +1,7 @@
 import pulumi
+import pulumi_cloudflare
+
+from dataclasses import dataclass
 
 import proxy
 import tunnel
@@ -7,16 +10,57 @@ config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 aws_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/prod")
 
+@dataclass
+class RouteMappingArgs:
+    subdomain: str
+    protected: bool = False
+    path: str = None
+
 # Port -> (Public, Subdomain, Path)
 ROUTE_MAPPING = {
-    "8646": (False, "nomad", None),
-    "11000": (True, "wiki", None),
-    "12000": (True, "wiki-preview", None),
-    "12010": (True, "bananas-preview-server", None),
-    "12012": (True, "bananas-preview-api", "/new-package/tus/*"),
-    "12013": (True, "bananas-preview-api", None),
-    "12014": (True, "bananas-preview", None),
+    "8646": RouteMappingArgs(subdomain="nomad", protected=True),
+    "11000": RouteMappingArgs(subdomain="wiki"),
+    "12000": RouteMappingArgs(subdomain="wiki-preview"),
+    "12010": RouteMappingArgs(subdomain="bananas-preview-server"),
+    # "12010": RouteMappingArgs(subdomain="binaries-preview", path="/bananas"),
+    "12012": RouteMappingArgs(subdomain="bananas-preview-api", path="/new-package/tus/*"),
+    "12013": RouteMappingArgs(subdomain="bananas-preview-api"),
+    "12014": RouteMappingArgs(subdomain="bananas-preview"),
 }
+
+# Subdomains where HTTP is allowed.
+# Old OpenTTD clients didn't have HTTPS support, as such, there are some
+# subdomains where HTTP is required.
+HTTP_ALLOWED = [
+    "bananas-preview-cdn",
+]
+
+HTTP_ALLOWED_FQDN = global_stack.get_output("domain").apply(lambda domain: [f'"{subdomain}.{domain}"' for subdomain in HTTP_ALLOWED])
+http_redirect_expression = HTTP_ALLOWED_FQDN.apply(lambda fqdns: f"(not ssl and http.host ne {' and http.host ne '.join(fqdns)})")
+
+pulumi_cloudflare.Ruleset(
+    "http-redirect-ruleset",
+    kind="zone",
+    name="HTTP -> HTTPS redirect",
+    phase="http_request_dynamic_redirect",
+    zone_id=global_stack.get_output("cloudflare_zone_id"),
+    rules=[
+        pulumi_cloudflare.RulesetRuleArgs(
+            action="redirect",
+            action_parameters=pulumi_cloudflare.RulesetRuleActionParametersArgs(
+                from_value=pulumi_cloudflare.RulesetRuleActionParametersFromValueArgs(
+                    preserve_query_string=True,
+                    status_code=301,
+                    target_url=pulumi_cloudflare.RulesetRuleActionParametersFromValueTargetUrlArgs(
+                        expression='concat("https://", http.host, http.request.uri.path)',
+                    ),
+                ),
+            ),
+            description="HTTP -> HTTPS redirect",
+            expression=http_redirect_expression,
+        ),
+    ],
+)
 
 proxy.Proxy(
     "ghcr-proxy",
@@ -78,15 +122,15 @@ t = tunnel.Tunnel(
     ),
 )
 
-for port, (public, name, path) in ROUTE_MAPPING.items():
+for port, route in ROUTE_MAPPING.items():
     t.add_route(
         tunnel.TunnelRoute(
-            name=name,
-            hostname=pulumi.Output.all(name=name, domain=global_stack.get_output("domain")).apply(lambda args: f"{args['name']}.{args['domain']}"),
+            name=route.subdomain,
+            hostname=pulumi.Output.all(name=route.subdomain, domain=global_stack.get_output("domain")).apply(lambda args: f"{args['name']}.{args['domain']}"),
             service=f"http://127.0.0.1:{port}",
-            path=path,
-            protect=not public,
-            allow_service_token=not public,
+            path=route.path,
+            protect=route.protected,
+            allow_service_token=route.protected,
         )
     )
 
