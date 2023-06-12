@@ -38,12 +38,15 @@ echo 'ec2-user:{password}' | chpasswd
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
 INSTANCE=$(curl -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/instance-id)
 
-aws autoscaling set-instance-health --instance-id ${{INSTANCE}} --health-status Unhealthy
-
 # Set an IPv6 address so we can talk to the outside world.
 MAC=$(curl -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/)
 PREFIX=$(curl --fail -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${{MAC}}ipv6-prefix)
 ip -6 addr add $(echo ${{PREFIX}} | sed 's@:0:0:0/80@:0:0:1/128@') dev ens5
+
+# Currently fails as ASG endpoint is IPv4 only.
+if [ -n "{'public' if args.is_public else ''}" ]; then
+    aws autoscaling set-instance-health --instance-id ${{INSTANCE}} --health-status Unhealthy
+fi
 
 dnf install -y \
     cni-plugins \
@@ -80,8 +83,11 @@ if [ -n "{'' if args.is_public else 'server'}" ]; then
     systemctl start nomad-proxy
 fi
 
-aws autoscaling set-instance-health --instance-id ${{INSTANCE}} --health-status Healthy
-aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id ${{INSTANCE}} --lifecycle-hook-name installed --auto-scaling-group-name nomad{'-public' if args.is_public else ''}-asg
+# Currently fails as ASG endpoint is IPv4 only.
+if [ -n "{'public' if args.is_public else ''}" ]; then
+    aws autoscaling set-instance-health --instance-id ${{INSTANCE}} --health-status Healthy
+    aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id ${{INSTANCE}} --lifecycle-hook-name installed --auto-scaling-group-name nomad{'-public' if args.is_public else ''}-asg
+fi
 """
         )
 
@@ -202,13 +208,14 @@ aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --i
             opts=pulumi.ResourceOptions(parent=self),
         )
 
-        pulumi_aws.autoscaling.LifecycleHook(
-            f"{name}-lifecycle-hook",
-            autoscaling_group_name=asg.name,
-            default_result="ABANDON",
-            heartbeat_timeout=300,
-            lifecycle_transition="autoscaling:EC2_INSTANCE_LAUNCHING",
-            name="installed",
-        )
+        if args.is_public:
+            pulumi_aws.autoscaling.LifecycleHook(
+                f"{name}-lifecycle-hook",
+                autoscaling_group_name=asg.name,
+                default_result="ABANDON",
+                heartbeat_timeout=300,
+                lifecycle_transition="autoscaling:EC2_INSTANCE_LAUNCHING",
+                name="installed",
+            )
 
         self.register_outputs({})
