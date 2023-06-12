@@ -7,8 +7,10 @@ from dataclasses import dataclass
 
 @dataclass
 class NomadArgs:
-    subnets: list[str]
     console_password: pulumi.Output[str]
+    instance_type: str
+    is_public: bool
+    subnets: list[str]
 
 
 class Nomad(pulumi.ComponentResource):
@@ -53,11 +55,13 @@ dnf install -y nomad
 
 pip install aiohttp
 
-curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.hcl -o /etc/nomad.d/nomad.hcl
+curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-{'public' if args.is_public else 'private'}.hcl -o /etc/nomad.d/nomad.hcl
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.service -o /etc/systemd/system/nomad.service
-curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.service -o /etc/systemd/system/nomad-proxy.service
-curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.py -o /usr/bin/nomad-proxy
-chmod +x /usr/bin/nomad-proxy
+if [ -n "{'' if args.is_public else 'private'}" ]; then
+    curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.service -o /etc/systemd/system/nomad-proxy.service
+    curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.py -o /usr/bin/nomad-proxy
+    chmod +x /usr/bin/nomad-proxy
+fi
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-rc.local -o /etc/rc.d/rc.local
 chmod +x /etc/rc.d/rc.local
 
@@ -121,7 +125,7 @@ systemctl start nomad-proxy
                 pulumi_aws.ec2.LaunchTemplateBlockDeviceMappingArgs(
                     device_name="/dev/xvda",
                     ebs=pulumi_aws.ec2.LaunchTemplateBlockDeviceMappingEbsArgs(
-                        volume_size=30,
+                        volume_size=10 if args.is_public else 30,
                     ),
                 )
             ],
@@ -129,10 +133,11 @@ systemctl start nomad-proxy
                 arn=iam_instance_profile.arn,
             ),
             image_id=ami.id,
-            instance_type="t4g.micro",
+            instance_type=args.instance_type,
             name=name,
             network_interfaces=[
                 pulumi_aws.ec2.LaunchTemplateNetworkInterfaceArgs(
+                    associate_public_ip_address=args.is_public,
                     device_index=0,
                     ipv6_prefix_count=1,
                 ),
@@ -152,7 +157,7 @@ systemctl start nomad-proxy
 
         pulumi_aws.autoscaling.Group(
             f"{name}-asg",
-            desired_capacity=3,
+            desired_capacity=len(args.subnets),
             health_check_grace_period=30,
             health_check_type="EC2",
             launch_template=pulumi_aws.autoscaling.GroupLaunchTemplateArgs(

@@ -16,14 +16,26 @@ network = network.Network(
     ),
 )
 
-nomad = nomad.Nomad(
+nomad.Nomad(
     "nomad",
     nomad.NomadArgs(
-        subnets=network.subnets,
         console_password=config.require_secret("console_password"),
+        instance_type="t4g.micro",
+        is_public=False,
+        subnets=network.private_subnets,
+    ),
+)
+nomad.Nomad(
+    "nomad-public",
+    nomad.NomadArgs(
+        console_password=config.require_secret("console_password"),
+        instance_type="t4g.nano",
+        is_public=True,
+        subnets=network.public_subnets,
     ),
 )
 
 pulumi.export("ipv6_cidr", network.vpc.ipv6_cidr_block)
 pulumi.export("vpc_id", network.vpc.id)
-pulumi.export("subnet_ids", [subnet.id for subnet in network.subnets])
+pulumi.export("private_subnet_ids", [subnet.id for subnet in network.private_subnets])
+pulumi.export("public_subnet_ids", [subnet.id for subnet in network.public_subnets])
