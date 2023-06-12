@@ -13,7 +13,7 @@ job "plugin-efs" {
       driver = "docker"
 
       config {
-        image = "registry.ipv6.docker.com/amazon/aws-efs-csi-driver:v1.5.5"
+        image = "registry.ipv6.docker.com/amazon/aws-efs-csi-driver:v1.5.6"
 
         args = [
           "--endpoint=unix://csi/csi.sock",
