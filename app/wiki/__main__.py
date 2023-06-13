@@ -53,8 +53,6 @@ pulumi_openttd.NomadService(
         service="wiki",
         settings=SETTINGS,
         dependencies=[volume],
-        service_token_id=cloudflare_core_stack.get_output("service_token_id"),
-        service_token_secret=cloudflare_core_stack.get_output("service_token_secret"),
         repository="TrueWiki",
     ),
 )

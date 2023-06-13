@@ -22,7 +22,6 @@ class TunnelRoute:
     path: str
     service: str
     protect: bool = False
-    allow_service_token: bool = False
 
 
 class Tunnel(pulumi.ComponentResource):
@@ -81,20 +80,12 @@ class Tunnel(pulumi.ComponentResource):
             opts=pulumi.ResourceOptions(parent=idp),
         )
 
-        self.service_token = pulumi_cloudflare.AccessServiceToken(
-            f"{name}-service-token",
-            account_id=args.account_id,
-            name=f"{name} Service Token",
-            opts=pulumi.ResourceOptions(parent=self),
-        )
         self.zone_id = args.zone_id
 
         self.register_outputs(
             {
                 "id": self.tunnel.id,
                 "tunnel_token": self.tunnel.tunnel_token,
-                "service_token_id": self.service_token.client_id,
-                "service_token_secret": self.service_token.client_secret,
             }
         )
 
@@ -149,22 +140,6 @@ class Tunnel(pulumi.ComponentResource):
                     precedence=1,
                     opts=pulumi.ResourceOptions(parent=application),
                 )
-
-                if route.allow_service_token:
-                    pulumi_cloudflare.AccessPolicy(
-                        f"{self._name}-app-{route.name}-policy-st",
-                        account_id=self.tunnel.account_id,
-                        application_id=application.id,
-                        decision="non_identity",
-                        includes=[
-                            pulumi_cloudflare.AccessPolicyIncludeArgs(
-                                service_tokens=[self.service_token.id],
-                            ),
-                        ],
-                        name="Service Token",
-                        precedence=2,
-                        opts=pulumi.ResourceOptions(parent=application),
-                    )
 
         ingress_rules.append(
             pulumi_cloudflare.TunnelConfigConfigIngressRuleArgs(

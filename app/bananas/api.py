@@ -20,8 +20,6 @@ class ApiArgs:
     s3_endpoint_url: str
     sentry_environment: str
     sentry_ingest_hostname: str
-    service_token_id: str
-    service_token_secret: str
     tusd_port: str
     user_github_client_id: str
     user_github_client_secret: str
@@ -85,8 +83,6 @@ class Api(pulumi.ComponentResource):
                 dependencies=[],
                 prefix="api-",
                 repository="bananas-api",
-                service_token_id=args.service_token_id,
-                service_token_secret=args.service_token_secret,
                 service="bananas-api",
                 settings=SETTINGS,
             ),

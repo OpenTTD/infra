@@ -12,8 +12,6 @@ class WebArgs:
     port: str
     sentry_environment: str
     sentry_ingest_hostname: str
-    service_token_id: str
-    service_token_secret: str
 
 
 class Web(pulumi.ComponentResource):
@@ -40,8 +38,6 @@ class Web(pulumi.ComponentResource):
                 dependencies=[],
                 prefix="web-",
                 repository="bananas-frontend-web",
-                service_token_id=args.service_token_id,
-                service_token_secret=args.service_token_secret,
                 service="bananas-web",
                 settings=SETTINGS,
             ),

@@ -20,8 +20,6 @@ class ServerArgs:
     s3_endpoint_url: str
     sentry_environment: str
     sentry_ingest_hostname: str
-    service_token_id: str
-    service_token_secret: str
     web_port: str
 
 
@@ -88,8 +86,6 @@ class Server(pulumi.ComponentResource):
                 dependencies=[],
                 prefix="server-",
                 repository="bananas-server",
-                service_token_id=args.service_token_id,
-                service_token_secret=args.service_token_secret,
                 service="bananas-server",
                 settings=SETTINGS,
             ),

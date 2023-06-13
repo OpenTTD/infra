@@ -13,8 +13,6 @@ class NomadServiceArgs:
     service: str
     settings: dict[str, str]
     dependencies: list[pulumi.Resource]
-    service_token_id: str
-    service_token_secret: str
     repository: str
     prefix: str = ""
 

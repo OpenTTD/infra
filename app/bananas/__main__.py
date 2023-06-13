@@ -40,8 +40,6 @@ server.Server(
         s3_endpoint_url=cdn.bucket_endpoint_url,
         sentry_environment=config.require("sentry-environment"),
         sentry_ingest_hostname=global_stack.get_output("sentry_ingest_hostname"),
-        service_token_id=cloudflare_core_stack.get_output("service_token_id"),
-        service_token_secret=cloudflare_core_stack.get_output("service_token_secret"),
         web_port=config.require("server-web-port"),
     ),
 )
@@ -60,8 +58,6 @@ api.Api(
         s3_endpoint_url=cdn.bucket_endpoint_url,
         sentry_environment=config.require("sentry-environment"),
         sentry_ingest_hostname=global_stack.get_output("sentry_ingest_hostname"),
-        service_token_id=cloudflare_core_stack.get_output("service_token_id"),
-        service_token_secret=cloudflare_core_stack.get_output("service_token_secret"),
         tusd_port=config.require("api-tusd-port"),
         user_github_client_id=config.require("api-user-github-client-id"),
         user_github_client_secret=config.require_secret("api-user-github-client-secret"),
@@ -78,7 +74,5 @@ web.Web(
         port=config.require("web-port"),
         sentry_environment=config.require("sentry-environment"),
         sentry_ingest_hostname=global_stack.get_output("sentry_ingest_hostname"),
-        service_token_id=cloudflare_core_stack.get_output("service_token_id"),
-        service_token_secret=cloudflare_core_stack.get_output("service_token_secret"),
     ),
 )
