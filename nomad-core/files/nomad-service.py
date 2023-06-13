@@ -4,6 +4,7 @@
 
 """
 
+import aiohttp
 import base64
 import json
 import logging
@@ -50,6 +51,63 @@ async def autoscaling_handler(request):
     service = request.match_info["service"]
     key = request.match_info["key"]
     payload = await request.json()
+
+    if "x-amz-sns-topic-arn" in request.headers:
+        log.info(json.dumps(payload))
+        type = payload["Type"]
+        if type == "SubscriptionConfirmation":
+            url = payload["SubscribeURL"]
+            async with aiohttp.ClientSession() as session:
+                await session.get(url)
+            return web.HTTPOk()
+
+        if type == "Notification":
+            message = json.loads(payload["Message"])
+
+            # We are only interested in autoscaling messages.
+            if "LifecycleTransition" not in message:
+                return web.HTTPOk()
+
+            if message["LifecycleTransition"] == "autoscaling:EC2_INSTANCE_TERMINATING":
+                instance = message["EC2InstanceId"]
+
+                # Get the Private IP DNS name of the instance.
+                instance_name = subprocess.run(
+                    shlex.split(f"aws ec2 describe-instances --instance-ids {instance} --query 'Reservations[0].Instances[0].PrivateDnsName' --output text"),
+                    check=True,
+                    stdout=subprocess.PIPE,
+                ).stdout.decode().strip()
+                if not instance_name:
+                    return web.HTTPOk()
+
+                # Find the node ID of the instance.
+                node_id = subprocess.run(
+                    shlex.split(f"nomad node status -filter '\"{instance_name}\" in Name' -quiet"),
+                    check=True,
+                    stdout=subprocess.PIPE,
+                ).stdout.decode().strip()
+                if not node_id:
+                    return web.HTTPOk()
+
+                # Make sure no new jobs are scheduled on the instance.
+                subprocess.run(
+                    shlex.split(f"nomad node eligibility -disable {node_id}"),
+                    check=True,
+                )
+
+                # Drain the instance (including system jobs).
+                subprocess.run(
+                    shlex.split(f"nomad node drain -yes -enable {node_id}"),
+                    check=True,
+                )
+
+                # Mark the node as ready for termination.
+                subprocess.run(
+                    shlex.split(f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {message['LifecycleHookName']} --auto-scaling-group-name {message['AutoScalingGroupName']}"),
+                    check=True,
+                )
+
+        return web.HTTPOk()
 
     if service not in SERVICE_KEYS or SERVICE_KEYS[service]["key"] != key:
         return web.HTTPNotFound()

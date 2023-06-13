@@ -221,13 +221,73 @@ fi
             opts=pulumi.ResourceOptions(parent=self),
         )
 
+        sns = pulumi_aws.sns.Topic(
+            f"{name}-sns-topic",
+            name=f"{name}-sns-topic",
+            opts=pulumi.ResourceOptions(parent=self),
+        )
+
+        pulumi_aws.sns.TopicSubscription(
+            f"{name}-sns-subscription",
+            endpoint=nomad_service_key.result.apply(lambda service_keys: f"https://nomad-service.openttd.org/autoscaling/{name}/{service_keys}"),
+            protocol="https",
+            topic=sns.arn,
+            opts=pulumi.ResourceOptions(parent=sns),
+        )
+
+        sns_role = pulumi_aws.iam.Role(
+            f"{name}-sns-role",
+            assume_role_policy=pulumi_aws.iam.get_policy_document(
+                statements=[
+                    pulumi_aws.iam.GetPolicyDocumentStatementArgs(
+                        actions=["sts:AssumeRole"],
+                        effect="Allow",
+                        principals=[
+                            pulumi_aws.iam.GetPolicyDocumentStatementPrincipalArgs(
+                                type="Service",
+                                identifiers=["autoscaling.amazonaws.com"],
+                            ),
+                        ],
+                    ),
+                ],
+            ).json,
+            inline_policies=[
+                pulumi_aws.iam.RoleInlinePolicyArgs(
+                    name="sns-publish",
+                    policy=pulumi_aws.iam.get_policy_document(
+                        statements=[
+                            pulumi_aws.iam.GetPolicyDocumentStatementArgs(
+                                actions=["sns:Publish"],
+                                effect="Allow",
+                                resources=[sns.arn],
+                            ),
+                        ],
+                    ).json,
+                ),
+            ],
+            name=f"{name}-sns-role",
+            opts=pulumi.ResourceOptions(parent=sns),
+        )
+
         pulumi_aws.autoscaling.LifecycleHook(
-            f"{name}-lifecycle-hook",
+            f"{name}-lifecycle-hook-launching",
             autoscaling_group_name=asg.name,
             default_result="ABANDON",
             heartbeat_timeout=300,
             lifecycle_transition="autoscaling:EC2_INSTANCE_LAUNCHING",
             name="installed",
+            opts=pulumi.ResourceOptions(parent=sns),
+        )
+        pulumi_aws.autoscaling.LifecycleHook(
+            f"{name}-lifecycle-hook-terminating",
+            autoscaling_group_name=asg.name,
+            default_result="CONTINUE",
+            heartbeat_timeout=300,
+            lifecycle_transition="autoscaling:EC2_INSTANCE_TERMINATING",
+            name="removal",
+            notification_target_arn=sns.arn,
+            role_arn=sns_role.arn,
+            opts=pulumi.ResourceOptions(parent=sns),
         )
 
         self.register_outputs({})

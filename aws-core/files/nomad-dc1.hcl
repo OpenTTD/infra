@@ -4,6 +4,13 @@ disable_update_check = true
 
 datacenter = "dc1"
 
+leave_on_terminate = true
+
+limits {
+  http_max_conns_per_client = 1000
+  rpc_max_conns_per_client = 1000
+}
+
 server {
   enabled = true
   bootstrap_expect = 3
