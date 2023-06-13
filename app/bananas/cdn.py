@@ -25,7 +25,9 @@ class Cdn(pulumi.ComponentResource):
         )
 
         self.bucket_name = r2.name
-        self.bucket_endpoint_url = args.cloudflare_account_id.apply(lambda account_id: f"https://{account_id}.r2.cloudflarestorage.com")
+        self.bucket_endpoint_url = args.cloudflare_account_id.apply(
+            lambda account_id: f"https://{account_id}.r2.cloudflarestorage.com"
+        )
 
         name = f"bananas-cdn-{pulumi.get_stack()}"
         worker = pulumi_cloudflare.WorkerScript(

@@ -1,6 +1,6 @@
 job "nomad-service" {
-  datacenters = ["dc1"]
-  type = "service"
+  datacenters = ["public"]
+  type = "system"
 
   group "nomad-service" {
     count = 1
@@ -76,7 +76,7 @@ EOT
 
       resources {
         cpu = 100
-        memory = 64
+        memory = 128
       }
     }
   }

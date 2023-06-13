@@ -1,6 +1,8 @@
 import base64
 import pulumi
 import pulumi_aws
+import pulumi_openttd
+import pulumi_random
 
 from dataclasses import dataclass
 
@@ -30,10 +32,26 @@ class Nomad(pulumi.ComponentResource):
             most_recent=True,
         )
 
-        user_data = args.console_password.apply(
-            lambda password: f"""#!/bin/bash
+        nomad_service_key = pulumi_random.RandomString(
+            f"{name}-nomad-service-key",
+            length=32,
+            special=False,
+        )
+        pulumi_openttd.NomadVariable(
+            f"{name}-variable-nomad-service-key",
+            pulumi_openttd.NomadVariableArgs(
+                path=f"deploy-keys/{name}-asg",
+                name="key",
+                value=nomad_service_key.result,
+                overwrite_if_exists=True,
+            ),
+            opts=pulumi.ResourceOptions(parent=self),
+        )
 
-echo 'ec2-user:{password}' | chpasswd
+        user_data = pulumi.Output.all(password=args.console_password, service_key=nomad_service_key.result).apply(
+            lambda kwargs: f"""#!/bin/bash
+
+echo 'ec2-user:{kwargs['password']}' | chpasswd
 
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
 INSTANCE=$(curl -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/instance-id)
@@ -43,10 +61,8 @@ MAC=$(curl -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/late
 PREFIX=$(curl --fail -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${{MAC}}ipv6-prefix)
 ip -6 addr add $(echo ${{PREFIX}} | sed 's@:0:0:0/80@:0:0:1/128@') dev ens5
 
-# Currently fails as ASG endpoint is IPv4 only.
-if [ -n "{'public' if args.is_public else ''}" ]; then
-    aws autoscaling set-instance-health --instance-id ${{INSTANCE}} --health-status Unhealthy
-fi
+# Give some time for the IPv6 to get online.
+ping -c 1 -W 1 google.com > /dev/null 2>&1
 
 dnf install -y \
     cni-plugins \
@@ -62,7 +78,10 @@ dnf install -y \
 dnf config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
 dnf install -y nomad
 
-pip install aiohttp
+pip install \
+    aiohttp \
+    pproxy \
+    # EOL
 
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-{'public' if args.is_public else 'dc1'}.hcl -o /etc/nomad.d/nomad.hcl
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.service -o /etc/systemd/system/nomad.service
@@ -74,10 +93,13 @@ systemctl start rc-local
 systemctl enable nomad
 systemctl start nomad
 
-# Currently fails as ASG endpoint is IPv4 only.
+# ASG endpoint is IPv4 only; so use aws CLI if we are public, and otherwise route it via our Nomad service (which runs on the public nodes).
 if [ -n "{'public' if args.is_public else ''}" ]; then
     aws autoscaling set-instance-health --instance-id ${{INSTANCE}} --health-status Healthy
-    aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id ${{INSTANCE}} --lifecycle-hook-name installed --auto-scaling-group-name nomad{'-public' if args.is_public else ''}-asg
+    aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id ${{INSTANCE}} --lifecycle-hook-name installed --auto-scaling-group-name nomad-public-asg
+else
+    curl -s -H "Content-Type: application/json" -X POST -d '{{"instance":"'${{INSTANCE}}'","state":"Healthy"}}' https://nomad-service.openttd.org/autoscaling/nomad-asg/{kwargs['service_key']}
+    curl -s -H "Content-Type: application/json" -X POST -d '{{"instance":"'${{INSTANCE}}'","state":"Continue","lifecycle-hook-name":"installed"}}' https://nomad-service.openttd.org/autoscaling/nomad-asg/{kwargs['service_key']}
 fi
 """
         )
@@ -199,14 +221,13 @@ fi
             opts=pulumi.ResourceOptions(parent=self),
         )
 
-        if args.is_public:
-            pulumi_aws.autoscaling.LifecycleHook(
-                f"{name}-lifecycle-hook",
-                autoscaling_group_name=asg.name,
-                default_result="ABANDON",
-                heartbeat_timeout=300,
-                lifecycle_transition="autoscaling:EC2_INSTANCE_LAUNCHING",
-                name="installed",
-            )
+        pulumi_aws.autoscaling.LifecycleHook(
+            f"{name}-lifecycle-hook",
+            autoscaling_group_name=asg.name,
+            default_result="ABANDON",
+            heartbeat_timeout=300,
+            lifecycle_transition="autoscaling:EC2_INSTANCE_LAUNCHING",
+            name="installed",
+        )
 
         self.register_outputs({})

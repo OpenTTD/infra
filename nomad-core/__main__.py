@@ -51,6 +51,15 @@ job = pulumi_nomad.Job(
     purge_on_destroy=True,
 )
 
+job = pulumi_nomad.Job(
+    "pproxy",
+    jobspec=open("files/pproxy.nomad").read(),
+    hcl2=pulumi_nomad.JobHcl2Args(
+        enabled=True,
+    ),
+    purge_on_destroy=True,
+)
+
 content = open("files/nomad-service.py").read()
 job = pulumi_nomad.Job(
     "nomad-service",
