@@ -5,14 +5,13 @@ import pulumi_cloudflare
 config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 
-# r2 = pulumi_cloudflare.R2Bucket(
-#     "r2",
-#     account_id=args.cloudflare_account_id,
-#     location="weur",
-#     name=f"installer-{pulumi.get_stack()}",
-# )
-
-bucket_name = f"installer-{pulumi.get_stack()}"
+r2 = pulumi_cloudflare.R2Bucket(
+    "r2",
+    account_id=global_stack.get_output("cloudflare_account_id"),
+    location="WEUR",
+    name=f"installer-{pulumi.get_stack()}",
+    opts=pulumi.ResourceOptions(protect=True),
+)
 
 name = f"binaries-{pulumi.get_stack()}"
 worker = pulumi_cloudflare.WorkerScript(
@@ -29,7 +28,7 @@ worker = pulumi_cloudflare.WorkerScript(
     r2_bucket_bindings=[
         pulumi_cloudflare.WorkerScriptR2BucketBindingArgs(
             name="BUCKET_INSTALLER",
-            bucket_name=bucket_name,
+            bucket_name=r2.name,
         )
     ],
 )

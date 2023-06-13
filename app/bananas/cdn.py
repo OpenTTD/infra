@@ -16,15 +16,16 @@ class Cdn(pulumi.ComponentResource):
     def __init__(self, name, args: CdnArgs, opts: pulumi.ResourceOptions = None):
         super().__init__("app:bananas:cdn", name, None, opts)
 
-        # r2 = pulumi_cloudflare.R2Bucket(
-        #     "r2",
-        #     account_id=args.cloudflare_account_id,
-        #     location="weur",
-        #     name=f"bananas-{pulumi.get_stack()}",
-        # )
+        r2 = pulumi_cloudflare.R2Bucket(
+            "r2",
+            account_id=args.cloudflare_account_id,
+            location="WEUR",
+            name=f"bananas-{pulumi.get_stack()}",
+            opts=pulumi.ResourceOptions(protect=True),
+        )
 
-        self.bucket_name = f"bananas-{pulumi.get_stack()}"
-        self.bucket_endpoint_url = "https://656eb7bf45569b729d05c1da49dfde7c.r2.cloudflarestorage.com"
+        self.bucket_name = r2.name
+        self.bucket_endpoint_url = args.cloudflare_account_id.apply(lambda account_id: f"https://{account_id}.r2.cloudflarestorage.com")
 
         name = f"bananas-cdn-{pulumi.get_stack()}"
         worker = pulumi_cloudflare.WorkerScript(
