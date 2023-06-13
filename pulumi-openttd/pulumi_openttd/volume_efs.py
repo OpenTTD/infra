@@ -9,6 +9,7 @@ from dataclasses import dataclass
 class VolumeEfsArgs:
     name: str
     subnet_ids: list[str]
+    security_group_id: str
 
 
 class VolumeEfs(pulumi.ComponentResource):
@@ -25,7 +26,7 @@ class VolumeEfs(pulumi.ComponentResource):
                 "Name": args.name,
             },
         )
-        args.subnet_ids.apply(lambda subnet_ids: self._mount_target(name, self.efs, subnet_ids))
+        args.subnet_ids.apply(lambda subnet_ids: self._mount_target(name, self.efs, subnet_ids, args.security_group_id))
 
         self.volume = pulumi_nomad.Volume(
             name,
@@ -53,11 +54,12 @@ class VolumeEfs(pulumi.ComponentResource):
             }
         )
 
-    def _mount_target(self, name, efs, subnet_ids):
+    def _mount_target(self, name, efs, subnet_ids, security_group_id):
         for subnet_id in subnet_ids:
             pulumi_aws.efs.MountTarget(
                 f"{name}-mount-{subnet_id}",
                 file_system_id=efs.id,
                 subnet_id=subnet_id,
+                security_groups=[security_group_id],
                 opts=pulumi.ResourceOptions(parent=efs),
             )

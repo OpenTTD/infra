@@ -43,6 +43,7 @@ volume = pulumi_openttd.VolumeEfs(
     pulumi_openttd.VolumeEfsArgs(
         name=f"wiki-{pulumi.get_stack()}-cache",
         subnet_ids=aws_core_stack.get_output("private_subnet_ids"),
+        security_group_id=aws_core_stack.get_output("nomad_security_group_id"),
     ),
 )
 
