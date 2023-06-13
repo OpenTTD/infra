@@ -31,10 +31,11 @@ job "bananas-server-[[ stack ]]" {
         provider = "nomad"
 
         tags = [
-          "port=[[ web_port ]]"
+          "port=[[ web_port ]]",
+          "reloadable=bananas-server-[[ stack ]]",
         ]
         canary_tags = [
-          "canary"
+          "canary",
         ]
 
         check {
@@ -59,10 +60,10 @@ job "bananas-server-[[ stack ]]" {
 
         tags = [
           "port=[[ content_port ]]",
-          "public=[[ content_public_port ]]"
+          "public=[[ content_public_port ]]",
         ]
         canary_tags = [
-          "canary"
+          "canary",
         ]
 
         check {

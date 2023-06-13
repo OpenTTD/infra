@@ -35,10 +35,11 @@ job "wiki-[[ stack ]]" {
         provider = "nomad"
 
         tags = [
-          "port=[[ port ]]"
+          "port=[[ port ]]",
+          "reloadable=wiki-[[ stack ]]",
         ]
         canary_tags = [
-          "canary"
+          "canary",
         ]
 
         check {

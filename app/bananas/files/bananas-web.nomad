@@ -27,10 +27,10 @@ job "bananas-web-[[ stack ]]" {
         provider = "nomad"
 
         tags = [
-          "port=[[ port ]]"
+          "port=[[ port ]]",
         ]
         canary_tags = [
-          "canary"
+          "canary",
         ]
 
         check {

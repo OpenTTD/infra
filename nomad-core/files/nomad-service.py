@@ -17,7 +17,8 @@ from aiohttp import web
 from aiohttp.web_log import AccessLogger
 
 REMOTE_IP_HEADER = "cf-connecting-ip"
-SERVICE_KEYS = None
+SERVICE_KEYS = {}
+SERVICES = {}
 
 routes = web.RouteTableDef()
 log = logging.getLogger(__name__)
@@ -72,20 +73,30 @@ async def autoscaling_handler(request):
                 instance = message["EC2InstanceId"]
 
                 # Get the Private IP DNS name of the instance.
-                instance_name = subprocess.run(
-                    shlex.split(f"aws ec2 describe-instances --instance-ids {instance} --query 'Reservations[0].Instances[0].PrivateDnsName' --output text"),
-                    check=True,
-                    stdout=subprocess.PIPE,
-                ).stdout.decode().strip()
+                instance_name = (
+                    subprocess.run(
+                        shlex.split(
+                            f"aws ec2 describe-instances --instance-ids {instance} --query 'Reservations[0].Instances[0].PrivateDnsName' --output text"
+                        ),
+                        check=True,
+                        stdout=subprocess.PIPE,
+                    )
+                    .stdout.decode()
+                    .strip()
+                )
                 if not instance_name:
                     return web.HTTPOk()
 
                 # Find the node ID of the instance.
-                node_id = subprocess.run(
-                    shlex.split(f"nomad node status -filter '\"{instance_name}\" in Name' -quiet"),
-                    check=True,
-                    stdout=subprocess.PIPE,
-                ).stdout.decode().strip()
+                node_id = (
+                    subprocess.run(
+                        shlex.split(f"nomad node status -filter '\"{instance_name}\" in Name' -quiet"),
+                        check=True,
+                        stdout=subprocess.PIPE,
+                    )
+                    .stdout.decode()
+                    .strip()
+                )
                 if not node_id:
                     return web.HTTPOk()
 
@@ -103,7 +114,9 @@ async def autoscaling_handler(request):
 
                 # Mark the node as ready for termination.
                 subprocess.run(
-                    shlex.split(f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {message['LifecycleHookName']} --auto-scaling-group-name {message['AutoScalingGroupName']}"),
+                    shlex.split(
+                        f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {message['LifecycleHookName']} --auto-scaling-group-name {message['AutoScalingGroupName']}"
+                    ),
                     check=True,
                 )
 
@@ -153,6 +166,42 @@ async def autoscaling_handler(request):
         ):
             await reply("Failed to send lifecycle action")
 
+    return response
+
+
+@routes.post("/reload/{service}/{key}")
+async def reload_handler(request):
+    service = request.match_info["service"]
+    key = request.match_info["key"]
+    payload = await request.json()
+
+    if service not in SERVICE_KEYS or SERVICE_KEYS[service]["key"] != key:
+        return web.HTTPNotFound()
+    if service not in SERVICES:
+        return web.HTTPNotFound()
+    if "secret" not in payload:
+        return web.HTTPNotFound()
+
+    secret = payload["secret"]
+
+    response = web.StreamResponse()
+    response.headers["Content-Type"] = "text/event-stream"
+    response.set_status(200)
+    await response.prepare(request)
+
+    async with aiohttp.ClientSession() as session:
+        for service in SERVICES[service]:
+            if not service:
+                continue
+
+            url = f"http://[{service['address']}]:{service['port']}/reload"
+            await response.write(f"Calling {url} ...\n".encode())
+            reload_response = await session.post(url, json={"secret": secret})
+            if reload_response.status >= 400:
+                await response.write(f"WARNING: reload failed.\n".encode())
+            await response.write(f"\n".encode())
+
+    await response.write("All instances reloaded.\n".encode())
     return response
 
 
@@ -249,8 +298,15 @@ def reload_service_keys():
     SERVICE_KEYS = json.loads(open("local/service-keys.json").read())
 
 
+def reload_services():
+    log.info("Reloading services")
+    global SERVICES
+    SERVICES = json.loads(open("local/services.json").read())
+
+
 def handle_sighup(*args):
     reload_service_keys()
+    reload_services()
 
 
 def main():

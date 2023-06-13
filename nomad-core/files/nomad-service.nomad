@@ -19,7 +19,7 @@ job "nomad-service" {
         provider = "nomad"
 
         tags = [
-          "port=10000"
+          "port=10000",
         ]
 
         check {
@@ -70,6 +70,41 @@ EOT
   },
 {{ end }}
   "fake": {}
+}
+EOT
+      }
+
+      template {
+        destination = "local/services.json"
+        change_mode = "signal"
+        change_signal = "SIGHUP"
+
+        data =<<EOT
+{
+
+{{- define "getService" -}}
+  {{- range . -}}
+    {{- if . | regexMatch "reloadable=[a-zA-Z0-9-]+" -}}
+      {{ . | trimPrefix "reloadable=" }}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- range nomadServices }}
+  {{- $service := executeTemplate "getService" .Tags }}
+  {{- if $service }}
+  "{{ $service }}": [
+  {{- range nomadService .Name }}
+    {
+      "address": "{{ .Address }}",
+      "port": {{ .Port }}
+    },
+  {{- end }}
+    {}
+  ],
+  {{- end }}
+{{- end }}
+  "fake": []
 }
 EOT
       }
