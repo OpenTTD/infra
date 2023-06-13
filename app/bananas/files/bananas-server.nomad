@@ -2,6 +2,10 @@ job "bananas-server-[[ stack ]]" {
   datacenters = ["dc1"]
   type = "service"
 
+  spread {
+    attribute = "${node.unique.id}"
+  }
+
   group "bananas-server" {
     count = [[ count ]]
 
