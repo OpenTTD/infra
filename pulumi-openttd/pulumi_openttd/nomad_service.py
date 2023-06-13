@@ -3,7 +3,7 @@ import pulumi
 import pulumi_github
 import pulumi_nomad
 import pulumi_openttd
-import os
+import pulumi_random
 
 from dataclasses import dataclass
 
@@ -73,38 +73,27 @@ class NomadService(pulumi.ComponentResource):
             opts=pulumi.ResourceOptions(parent=self, depends_on=[*args.dependencies, *variables.values()]),
         )
 
-        files_folder = os.path.join(os.path.dirname(__file__), "..", "files")
-        jobspec_deploy = open(f"{files_folder}/deploy.nomad", "rb").read().decode()
-        jobspec_deploy = jobspec_deploy.replace("[[ stack ]]", pulumi.get_stack()).replace(
-            "[[ service ]]", args.service
+        nomad_service_key = pulumi_random.RandomString(
+            f"{args.prefix}nomad-service-key",
+            length=32,
+            special=False,
         )
-
-        pulumi_nomad.Job(
-            f"{args.prefix}job-deploy",
-            jobspec=jobspec_deploy,
-            hcl2=pulumi_nomad.JobHcl2Args(
-                enabled=True,
+        pulumi_openttd.NomadVariable(
+            f"{args.prefix}variable-nomad-service-key",
+            pulumi_openttd.NomadVariableArgs(
+                path=f"deploy-keys/{args.service}-{pulumi.get_stack()}",
+                name="key",
+                value=nomad_service_key.result,
+                overwrite_if_exists=True,
             ),
-            purge_on_destroy=True,
             opts=pulumi.ResourceOptions(parent=self),
         )
-
-        # Only one of the stacks need to deploy the secrets, as they go to the same repository.
-        if pulumi.get_stack() == "prod":
-            pulumi_github.ActionsSecret(
-                f"{args.prefix}github-secret-nomad-cloudflare-access-id",
-                repository=args.repository,
-                secret_name="NOMAD_CF_ACCESS_CLIENT_ID",
-                plaintext_value=args.service_token_id,
-                opts=pulumi.ResourceOptions(parent=self),
-            )
-
-            pulumi_github.ActionsSecret(
-                f"{args.prefix}github-secret-nomad-cloudflare-access-secret",
-                repository=args.repository,
-                secret_name="NOMAD_CF_ACCESS_CLIENT_SECRET",
-                plaintext_value=args.service_token_secret,
-                opts=pulumi.ResourceOptions(parent=self),
-            )
+        pulumi_github.ActionsSecret(
+            f"{args.prefix}github-secret-nomad-service-key",
+            repository=args.repository,
+            secret_name=f"NOMAD_SERVICE_{pulumi.get_stack().upper()}_KEY",
+            plaintext_value=nomad_service_key.result,
+            opts=pulumi.ResourceOptions(parent=self),
+        )
 
         self.register_outputs({})

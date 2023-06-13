@@ -78,7 +78,11 @@ stream {
 {{- range nomadService .Name }}
   {{- if in .Tags "canary" }}
   {{- else }}
+    {{- if in .Address ":" }}
     server [{{ .Address }}]:{{ .Port }};
+    {{- else }}
+    server {{ .Address }}:{{ .Port }};
+    {{- end }}
   {{- end }}
 {{- end }}
   }

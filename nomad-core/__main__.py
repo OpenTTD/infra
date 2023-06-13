@@ -13,7 +13,6 @@ job = pulumi_nomad.Job(
     purge_on_destroy=True,
 )
 
-
 job = pulumi_nomad.Job(
     "csi-efs",
     jobspec=open("files/csi-efs.nomad").read(),
@@ -22,7 +21,6 @@ job = pulumi_nomad.Job(
     ),
     purge_on_destroy=True,
 )
-
 
 job = pulumi_nomad.Job(
     "nginx-dc1",
@@ -36,6 +34,16 @@ job = pulumi_nomad.Job(
 job = pulumi_nomad.Job(
     "nginx-public",
     jobspec=open("files/nginx-public.nomad").read(),
+    hcl2=pulumi_nomad.JobHcl2Args(
+        enabled=True,
+    ),
+    purge_on_destroy=True,
+)
+
+content = open("files/nomad-service.py").read()
+job = pulumi_nomad.Job(
+    "nomad-service",
+    jobspec=open("files/nomad-service.nomad").read().replace("[[ content ]]", content),
     hcl2=pulumi_nomad.JobHcl2Args(
         enabled=True,
     ),
