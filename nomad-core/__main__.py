@@ -49,3 +49,13 @@ job = pulumi_nomad.Job(
     ),
     purge_on_destroy=True,
 )
+
+content = open("files/nomad-proxy.py").read()
+job = pulumi_nomad.Job(
+    "nomad-proxy",
+    jobspec=open("files/nomad-proxy.nomad").read().replace("[[ content ]]", content),
+    hcl2=pulumi_nomad.JobHcl2Args(
+        enabled=True,
+    ),
+    purge_on_destroy=True,
+)

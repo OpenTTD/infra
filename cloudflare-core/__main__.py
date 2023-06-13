@@ -20,7 +20,7 @@ class RouteMappingArgs:
 
 # Port -> (Public, Subdomain, Path)
 ROUTE_MAPPING = {
-    "8646": RouteMappingArgs(subdomain="nomad", protected=True),
+    "8686": RouteMappingArgs(subdomain="nomad", protected=True),
     "10000": RouteMappingArgs(subdomain="nomad-service"),
     "11000": RouteMappingArgs(subdomain="wiki"),
     "12000": RouteMappingArgs(subdomain="wiki-preview"),

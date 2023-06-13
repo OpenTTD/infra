@@ -66,11 +66,6 @@ pip install aiohttp
 
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-{'public' if args.is_public else 'dc1'}.hcl -o /etc/nomad.d/nomad.hcl
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.service -o /etc/systemd/system/nomad.service
-if [ -n "{'' if args.is_public else 'server'}" ]; then
-    curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.service -o /etc/systemd/system/nomad-proxy.service
-    curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-proxy.py -o /usr/bin/nomad-proxy
-    chmod +x /usr/bin/nomad-proxy
-fi
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-rc.local -o /etc/rc.d/rc.local
 chmod +x /etc/rc.d/rc.local
 
@@ -78,10 +73,6 @@ systemctl enable rc-local
 systemctl start rc-local
 systemctl enable nomad
 systemctl start nomad
-if [ -n "{'' if args.is_public else 'server'}" ]; then
-    systemctl enable nomad-proxy
-    systemctl start nomad-proxy
-fi
 
 # Currently fails as ASG endpoint is IPv4 only.
 if [ -n "{'public' if args.is_public else ''}" ]; then
