@@ -1,9 +1,19 @@
 import pulumi
 import pulumi_nomad
+import pulumi_openttd
 
 config = pulumi.Config()
+cloudflare_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/cloudflare-core/prod")
 
-
+cloudflare_tunnel = pulumi_openttd.NomadVariable(
+    "variable-cloudflare-tunnel",
+    pulumi_openttd.NomadVariableArgs(
+        path="nomad/jobs/cloudflared",
+        name="tunnel_token",
+        value=cloudflare_core_stack.get_output("tunnel_token"),
+        overwrite_if_exists=True,
+    ),
+)
 job = pulumi_nomad.Job(
     "cloudflared",
     jobspec=open("files/cloudflared.nomad").read(),
@@ -11,6 +21,7 @@ job = pulumi_nomad.Job(
         enabled=True,
     ),
     purge_on_destroy=True,
+    opts=pulumi.ResourceOptions(depends_on=[cloudflare_tunnel]),
 )
 
 job = pulumi_nomad.Job(
