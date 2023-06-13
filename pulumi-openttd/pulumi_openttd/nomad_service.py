@@ -71,7 +71,7 @@ class NomadService(pulumi.ComponentResource):
             opts=pulumi.ResourceOptions(parent=self, depends_on=[*args.dependencies, *variables.values()]),
         )
 
-        nomad_service_key = pulumi_random.RandomString(
+        self.nomad_service_key = pulumi_random.RandomPassword(
             f"{args.prefix}nomad-service-key",
             length=32,
             special=False,
@@ -81,7 +81,7 @@ class NomadService(pulumi.ComponentResource):
             pulumi_openttd.NomadVariableArgs(
                 path=f"deploy-keys/{args.service}-{pulumi.get_stack()}",
                 name="key",
-                value=nomad_service_key.result,
+                value=self.nomad_service_key.result,
                 overwrite_if_exists=True,
             ),
             opts=pulumi.ResourceOptions(parent=self),
@@ -90,8 +90,8 @@ class NomadService(pulumi.ComponentResource):
             f"{args.prefix}github-secret-nomad-service-key",
             repository=args.repository,
             secret_name=f"NOMAD_SERVICE_{pulumi.get_stack().upper()}_KEY",
-            plaintext_value=nomad_service_key.result,
-            opts=pulumi.ResourceOptions(parent=self),
+            plaintext_value=self.nomad_service_key.result,
+            opts=pulumi.ResourceOptions(parent=self, delete_before_replace=True),
         )
 
         self.register_outputs({})

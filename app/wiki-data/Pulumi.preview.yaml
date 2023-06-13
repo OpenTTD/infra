@@ -1,0 +1,3 @@
+config:
+  app-wiki-data:storage-github-url: https://github-proxy.openttd.org/OpenTTD/wiki-data-staging
+  github:owner: OpenTTD

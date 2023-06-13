@@ -32,7 +32,7 @@ class Nomad(pulumi.ComponentResource):
             most_recent=True,
         )
 
-        nomad_service_key = pulumi_random.RandomString(
+        nomad_service_key = pulumi_random.RandomPassword(
             f"{name}-nomad-service-key",
             length=32,
             special=False,

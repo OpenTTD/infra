@@ -54,7 +54,6 @@ async def autoscaling_handler(request):
     payload = await request.json()
 
     if "x-amz-sns-topic-arn" in request.headers:
-        log.info(json.dumps(payload))
         type = payload["Type"]
         if type == "SubscriptionConfirmation":
             url = payload["SubscribeURL"]
@@ -198,8 +197,9 @@ async def reload_handler(request):
             await response.write(f"Calling {url} ...\n".encode())
             reload_response = await session.post(url, json={"secret": secret})
             if reload_response.status >= 400:
-                await response.write(f"WARNING: reload failed.\n".encode())
-            await response.write(f"\n".encode())
+                await response.write(f"  FAIL\n\n".encode())
+            else:
+                await response.write(f"  OK\n\n".encode())
 
     await response.write("All instances reloaded.\n".encode())
     return response
@@ -292,21 +292,11 @@ async def fallback(request):
     return web.HTTPNotFound()
 
 
-def reload_service_keys():
-    log.info("Reloading service keys")
-    global SERVICE_KEYS
-    SERVICE_KEYS = json.loads(open("local/service-keys.json").read())
-
-
-def reload_services():
-    log.info("Reloading services")
-    global SERVICES
-    SERVICES = json.loads(open("local/services.json").read())
-
-
 def handle_sighup(*args):
-    reload_service_keys()
-    reload_services()
+    log.info("Reloading files ...")
+    global SERVICE_KEYS, SERVICES
+    SERVICE_KEYS = json.loads(open("local/service-keys.json").read())
+    SERVICES = json.loads(open("local/services.json").read())
 
 
 def main():

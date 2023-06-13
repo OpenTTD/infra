@@ -1,5 +1,6 @@
 import pulumi
 import pulumi_cloudflare
+import pulumi_github
 import pulumi_random
 import pulumi_openttd
 
@@ -12,7 +13,7 @@ cloudflare_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/clou
 
 pulumi_openttd.autotag.register()
 
-reload_secret = pulumi_random.RandomString(
+reload_secret = pulumi_random.RandomPassword(
     "reload-secret",
     length=32,
     special=False,
@@ -47,7 +48,7 @@ volume = pulumi_openttd.VolumeEfs(
     ),
 )
 
-pulumi_openttd.NomadService(
+service = pulumi_openttd.NomadService(
     "wiki",
     pulumi_openttd.NomadServiceArgs(
         service="wiki",
@@ -64,4 +65,8 @@ pulumi_cloudflare.PageRule(
     ),
     target=pulumi.Output.format("{}.{}/*", config.require("hostname"), global_stack.get_output("domain")),
     zone_id=global_stack.get_output("cloudflare_zone_id"),
+    opts=pulumi.ResourceOptions(ignore_changes=["priority"]),
 )
+
+pulumi.export("reload_secret", reload_secret.result)
+pulumi.export("nomad_service_key", service.nomad_service_key.result)

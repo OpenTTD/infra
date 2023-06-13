@@ -13,6 +13,7 @@ cd $(dirname $0)
 APP_LIST="
 website
 wiki
+wiki-data
 "
 
 IFS="

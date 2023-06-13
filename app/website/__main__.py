@@ -54,6 +54,7 @@ pulumi_github.ActionsSecret(
     repository="website",
     secret_name="CLOUDFLARE_API_TOKEN",
     plaintext_value=api_token.value,
+    opts=pulumi.ResourceOptions(delete_before_replace=True),
 )
 
 pulumi_github.ActionsSecret(
@@ -61,6 +62,7 @@ pulumi_github.ActionsSecret(
     repository="website",
     secret_name="CLOUDFLARE_ACCOUNT_ID",
     plaintext_value=global_stack.get_output("cloudflare_account_id"),
+    opts=pulumi.ResourceOptions(delete_before_replace=True),
 )
 
 pulumi_github.ActionsVariable(
@@ -68,4 +70,5 @@ pulumi_github.ActionsVariable(
     repository="website",
     variable_name="CLOUDFLARE_PROJECT_NAME",
     value=config.require("name"),
+    opts=pulumi.ResourceOptions(delete_before_replace=True),
 )

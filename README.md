@@ -97,6 +97,8 @@ Next, we need to get the cluster online:
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/nomad-core/files/cloudflared.nomad -o /tmp/cloudflared.nomad
 nomad var put nomad/jobs/cloudflared tunnel_token=<tunnel token>
 nomad job run /tmp/cloudflared.nomad
+
+nomad operator scheduler set-config -scheduler-algorithm=spread
 ```
 
 - Wait for the Cloudflare tunnel to come online.

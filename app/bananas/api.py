@@ -1,6 +1,7 @@
 import hashlib
 import pulumi
 import pulumi_cloudflare
+import pulumi_github
 import pulumi_random
 import pulumi_openttd
 
@@ -48,7 +49,7 @@ class Api(pulumi.ComponentResource):
             ],
         )
 
-        reload_secret = pulumi_random.RandomString(
+        reload_secret = pulumi_random.RandomPassword(
             "api-reload-secret",
             length=32,
             special=False,
@@ -77,7 +78,7 @@ class Api(pulumi.ComponentResource):
             "web_port": args.web_port,
         }
 
-        pulumi_openttd.NomadService(
+        service = pulumi_openttd.NomadService(
             "api",
             pulumi_openttd.NomadServiceArgs(
                 dependencies=[],
@@ -86,6 +87,21 @@ class Api(pulumi.ComponentResource):
                 service="bananas-api",
                 settings=SETTINGS,
             ),
+        )
+
+        pulumi_github.ActionsSecret(
+            f"api-github-secret-reload-secret",
+            repository=args.index_github_url.split("/")[-1],
+            secret_name=f"API_RELOAD_SECRET",
+            plaintext_value=reload_secret.result,
+            opts=pulumi.ResourceOptions(parent=self, delete_before_replace=True),
+        )
+        pulumi_github.ActionsSecret(
+            f"api-github-secret-nomad-service-key",
+            repository=args.index_github_url.split("/")[-1],
+            secret_name=f"API_NOMAD_SERVICE_{pulumi.get_stack().upper()}_KEY",
+            plaintext_value=service.nomad_service_key.result,
+            opts=pulumi.ResourceOptions(parent=self, delete_before_replace=True),
         )
 
         self.register_outputs({})
