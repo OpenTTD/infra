@@ -80,6 +80,12 @@ class Tunnel(pulumi.ComponentResource):
             opts=pulumi.ResourceOptions(parent=idp),
         )
 
+        self.service_token = pulumi_cloudflare.AccessServiceToken(
+            f"{name}-service-token",
+            account_id=args.account_id,
+            name=f"{name} Service Token",
+            opts=pulumi.ResourceOptions(parent=self),
+        )
         self.zone_id = args.zone_id
 
         self.register_outputs(
@@ -138,6 +144,21 @@ class Tunnel(pulumi.ComponentResource):
                     ],
                     name="Policy",
                     precedence=1,
+                    opts=pulumi.ResourceOptions(parent=application),
+                )
+
+                pulumi_cloudflare.AccessPolicy(
+                    f"{self._name}-app-{route.name}-policy-st",
+                    account_id=self.tunnel.account_id,
+                    application_id=application.id,
+                    decision="non_identity",
+                    includes=[
+                        pulumi_cloudflare.AccessPolicyIncludeArgs(
+                            service_tokens=[self.service_token.id],
+                        ),
+                    ],
+                    name="Service Token",
+                    precedence=2,
                     opts=pulumi.ResourceOptions(parent=application),
                 )
 

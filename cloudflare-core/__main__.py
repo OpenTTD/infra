@@ -145,3 +145,5 @@ for port, route in ROUTE_MAPPING.items():
 t.create_routes()
 
 pulumi.export("tunnel_token", t.tunnel.tunnel_token)
+pulumi.export("service_token_id", t.service_token.client_id)
+pulumi.export("service_token_secret", t.service_token.client_secret)
