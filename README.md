@@ -69,12 +69,25 @@ Now you should be able to execute `nomad node status` and get a valid response.
 
 Make sure you deployed `aws-core` and `cloudflare-core` first.
 
-When this is deployed for the first time, [Nomad](https://www.hashicorp.com/products/nomad) is empty, and running in a private subnet on AWS.
-In result, it is inaccessible.
+When this is deployed for the first time, [Nomad](https://www.hashicorp.com/products/nomad) is installed on AWS, scaled up to one instance, which keeps failing health-checks.
 
-To solve this, some minor manual labor is required:
+To solve this, some manual labor is required.
+This will take about 30 minutes to complete in total, and should only be done when there isn't anything to start with.
+
+First, some changes on Cloudflare:
+- Login to Cloudflare.
+- Navigate to Cloudflare Access (via Zero Trust), find the Tunnel.
+- Change the public hostnames for `nomad.openttd.org` to point to port 4646.
+  This connection is not very stable, but sufficiently to bootstrap the process.
+
+Next, we need to get the cluster online:
 - Run `pulumi stack output tunnel_token --show-secrets` in the `cloudflare-core` project and remember the output.
 - Login to AWS.
+- Go to the ASG and find `nomad-asg`.
+- Delete the Lifecycle Hooks under `Instance management`
+- Set the `desired` to 3 under `Details`.
+- This will spin up a total of three EC2 instances, that form a single Nomad cluster.
+  It needs to be three, as that is how the cluster if configured; before it sees three instances, it will not form a functional cluster.
 - Find one of the Nomad EC2 instances.
 - Open an EC2 Serial Console.
 - Login with `ec2-user` and the password as given via `console_password` config.
@@ -86,6 +99,9 @@ nomad var put nomad/jobs/cloudflared tunnel_token=<tunnel token>
 nomad job run /tmp/cloudflared.nomad
 ```
 
-- When the tunnel comes online, Cloudflare can be used to access Nomad's UI.
-- From here on, the other Pulumi projects can be executed.
-  The `nomad-core` will redeploy `cloudflared`, but this time managed.
+- Wait for the Cloudflare tunnel to come online.
+- Now we can continue with deploying `nomad-core`.
+- When `nomad-core` is deployed, redeploy `aws-core` and `cloudflare-core` with `-r` (refresh).
+  This undoes our temporary changes and makes the system whole again.
+- Validate that the `nomad.openttd.org` in Cloudflare points to port 8686 again.
+- Validate that the Lifecycle Hooks on the ASG are installed again.
