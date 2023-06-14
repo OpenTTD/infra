@@ -87,6 +87,7 @@ class Api(pulumi.ComponentResource):
                 service="bananas-api",
                 settings=SETTINGS,
             ),
+            opts=pulumi.ResourceOptions(parent=self),
         )
 
         pulumi_github.ActionsSecret(

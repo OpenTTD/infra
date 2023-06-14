@@ -10,9 +10,11 @@ from dataclasses import dataclass
 
 @dataclass
 class ServerArgs:
+    content_hostname: str
     content_port: str
     content_public_port: str
     cloudflare_account_id: str
+    cloudflare_zone_id: str
     domain: str
     hostname: str
     index_github_url: str
@@ -90,6 +92,18 @@ class Server(pulumi.ComponentResource):
                 service="bananas-server",
                 settings=SETTINGS,
             ),
+            opts=pulumi.ResourceOptions(parent=self),
+        )
+
+        nlb_hostname = pulumi.Output.format("{}.{}", args.content_hostname, args.domain)
+        pulumi_cloudflare.Record(
+            f"server-dns",
+            name=nlb_hostname,
+            proxied=False,
+            type="CNAME",
+            value="nlb.openttd.org",
+            zone_id=args.cloudflare_zone_id,
+            opts=pulumi.ResourceOptions(parent=self),
         )
 
         pulumi_github.ActionsSecret(

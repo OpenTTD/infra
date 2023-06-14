@@ -29,9 +29,11 @@ cdn = cdn.Cdn(
 server.Server(
     "server",
     server.ServerArgs(
+        content_hostname=config.require("server-content-hostname"),
         content_port=config.require("server-content-port"),
         content_public_port=config.require("server-content-public-port"),
         cloudflare_account_id=global_stack.get_output("cloudflare_account_id"),
+        cloudflare_zone_id=global_stack.get_output("cloudflare_zone_id"),
         domain=global_stack.get_output("domain"),
         hostname=config.require("hostname"),
         index_github_url=config.require("index-github-url"),

@@ -41,6 +41,7 @@ class Web(pulumi.ComponentResource):
                 service="bananas-web",
                 settings=SETTINGS,
             ),
+            opts=pulumi.ResourceOptions(parent=self),
         )
 
         self.register_outputs({})
