@@ -71,7 +71,7 @@ nomad.Nomad(
     "nomad",
     nomad.NomadArgs(
         console_password=config.require_secret("console_password"),
-        instance_type="t4g.micro",
+        instance_type="t4g.small",
         is_public=False,
         security_groups=[security_group.id],
         subnets=network.private_subnets,
