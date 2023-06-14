@@ -60,6 +60,16 @@ pulumi_nomad.Job(
     purge_on_destroy=True,
 )
 
+# This is purely to visualise the system consumes memory.
+pulumi_nomad.Job(
+    "system",
+    jobspec=open("files/system.nomad").read(),
+    hcl2=pulumi_nomad.JobHcl2Args(
+        enabled=True,
+    ),
+    purge_on_destroy=True,
+)
+
 content = open("files/nomad-service.py").read()
 pulumi_nomad.Job(
     "nomad-service",
