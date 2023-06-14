@@ -72,6 +72,9 @@ EOT
 
 stream {
 {{- range nomadServices }}
+{{- $port := executeTemplate "getPort" .Tags }}
+{{- if $port }}
+
   upstream {{ .Name | toLower }} {
     hash $remote_addr;
 
@@ -87,8 +90,6 @@ stream {
 {{- end }}
   }
 
-{{- $port := executeTemplate "getPort" .Tags }}
-
   server {
     listen {{ $port }} {{- if in .Tags "protocol=udp" -}}udp{{- end -}};
     listen [::]:{{ $port }} {{- if in .Tags "protocol=udp" -}}udp{{- end -}};
@@ -102,6 +103,7 @@ stream {
   }
 
 {{ end }}
+{{- end }}
 }
 EOF
 

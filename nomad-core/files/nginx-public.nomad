@@ -6,10 +6,35 @@ job "nginx-public" {
   group "nginx" {
     network {
       mode = "host"
+      port "http" { static = 80 }
     }
 
     task "nginx" {
       driver = "docker"
+
+      service {
+        name = "nginx-public"
+        port = "http"
+        provider = "nomad"
+
+        tags = [
+          "nlb",
+        ]
+
+        check {
+          type = "http"
+          name = "app_health"
+          path = "/healthz"
+          interval = "20s"
+          timeout = "5s"
+
+          check_restart {
+            limit = 3
+            grace = "90s"
+            ignore_warnings = false
+          }
+        }
+      }
 
       config {
         image = "registry.ipv6.docker.com/library/nginx:1.25.0"

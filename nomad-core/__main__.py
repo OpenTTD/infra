@@ -1,8 +1,10 @@
 import pulumi
+import pulumi_cloudflare
 import pulumi_nomad
 import pulumi_openttd
 
 config = pulumi.Config()
+global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 cloudflare_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/cloudflare-core/prod")
 
 cloudflare_tunnel = pulumi_openttd.NomadVariable(
@@ -64,6 +66,41 @@ pulumi_nomad.Job(
 pulumi_nomad.Job(
     "system",
     jobspec=open("files/system.nomad").read(),
+    hcl2=pulumi_nomad.JobHcl2Args(
+        enabled=True,
+    ),
+    purge_on_destroy=True,
+)
+
+permission_groups = pulumi_cloudflare.get_api_token_permission_groups()
+resources = global_stack.get_output("cloudflare_zone_id").apply(
+    lambda zone_id: {f"com.cloudflare.api.account.zone.{zone_id}": "*"}
+)
+resources.apply(lambda text: pulumi.log.info(str(text)))
+nomad_service_api_token = pulumi_cloudflare.ApiToken(
+    "nomad-service-api-token",
+    name="nomad-core/service",
+    policies=[
+        pulumi_cloudflare.ApiTokenPolicyArgs(
+            resources=resources,
+            permission_groups=[
+                permission_groups.zone["DNS Write"],
+            ],
+        ),
+    ],
+)
+
+content = pulumi.Output.all(
+    api_token=nomad_service_api_token.value, zone_id=global_stack.get_output("cloudflare_zone_id")
+).apply(
+    lambda kwargs: open("files/nlb-dns-update.py")
+    .read()
+    .replace("[[ cloudflare_zone_id ]]", kwargs["zone_id"])
+    .replace("[[ cloudflare_api_token ]]", kwargs["api_token"])
+)
+pulumi_nomad.Job(
+    "nlb-dns-update",
+    jobspec=content.apply(lambda content: open("files/nlb-dns-update.nomad").read().replace("[[ content ]]", content)),
     hcl2=pulumi_nomad.JobHcl2Args(
         enabled=True,
     ),
