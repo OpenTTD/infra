@@ -17,6 +17,7 @@ class ApiArgs:
     index_github_app_key: str
     index_github_url: str
     memory: str
+    memory_max: str
     s3_bucket: str
     s3_endpoint_url: str
     sentry_environment: str
@@ -62,6 +63,7 @@ class Api(pulumi.ComponentResource):
             "index_github_app_key": args.index_github_app_key,
             "index_github_url": args.index_github_url,
             "memory": args.memory,
+            "memory_max": args.memory_max,
             "reload_secret": reload_secret.result,
             "sentry_dsn": sentry_key,
             "sentry_environment": args.sentry_environment,

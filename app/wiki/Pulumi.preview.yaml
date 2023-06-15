@@ -1,6 +1,7 @@
 config:
   app-wiki:hostname: wiki-preview
-  app-wiki:memory: "128"
+  app-wiki:memory: "64"
+  app-wiki:memory-max: "128"
   app-wiki:port: "12000"
   app-wiki:sentry-environment: preview
   app-wiki:storage-github-app-id: "337042"

@@ -9,6 +9,7 @@ class WebArgs:
     domain: str
     hostname: str
     memory: str
+    memory_max: str
     port: str
     sentry_environment: str
     sentry_ingest_hostname: str
@@ -26,6 +27,7 @@ class Web(pulumi.ComponentResource):
             "api_url": api_url,
             "frontend_url": frontend_url,
             "memory": args.memory,
+            "memory_max": args.memory_max,
             "sentry_dsn": sentry_key,
             "sentry_environment": args.sentry_environment,
             "stack": pulumi.get_stack(),

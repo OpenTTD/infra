@@ -36,7 +36,8 @@ job "cloudflared" {
 
       resources {
         cpu = 100
-        memory = 64
+        memory = 32
+        memory_max = 64
       }
     }
   }

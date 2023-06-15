@@ -26,6 +26,7 @@ sentry_key = pulumi_openttd.get_sentry_key(
 SETTINGS = {
     "frontend_url": frontend_url,
     "memory": config.require("memory"),
+    "memory_max": config.require("memory-max"),
     "port": config.require("port"),
     "reload_secret": reload_secret.result,
     "sentry_dsn": sentry_key,

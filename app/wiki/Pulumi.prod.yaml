@@ -1,6 +1,7 @@
 config:
   app-wiki:hostname: wiki
   app-wiki:memory: "384"
+  app-wiki:memory-max: "512"
   app-wiki:port: "11000"
   app-wiki:sentry-environment: production
   app-wiki:storage-github-app-id: "343074"

@@ -98,6 +98,7 @@ curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/nomad-core/files/c
 nomad var put nomad/jobs/cloudflared tunnel_token=<tunnel token>
 nomad job run /tmp/cloudflared.nomad
 
+nomad operator scheduler set-config -memory-oversubscription=true
 nomad operator scheduler set-config -scheduler-algorithm=spread
 ```
 

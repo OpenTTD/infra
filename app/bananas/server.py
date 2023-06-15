@@ -19,6 +19,7 @@ class ServerArgs:
     hostname: str
     index_github_url: str
     memory: str
+    memory_max: str
     s3_bucket: str
     s3_endpoint_url: str
     sentry_environment: str
@@ -70,6 +71,7 @@ class Server(pulumi.ComponentResource):
             "count": "1" if pulumi.get_stack() == "preview" else "2",
             "index_github_url": args.index_github_url,
             "memory": args.memory,
+            "memory_max": args.memory_max,
             "reload_secret": reload_secret.result,
             "sentry_dsn": sentry_key,
             "sentry_environment": args.sentry_environment,

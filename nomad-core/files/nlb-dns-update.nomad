@@ -44,7 +44,8 @@ EOT
 
       resources {
         cpu = 100
-        memory = 128
+        memory = 32
+        memory_max = 128
       }
     }
   }

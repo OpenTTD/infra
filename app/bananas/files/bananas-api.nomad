@@ -120,6 +120,7 @@ job "bananas-api-[[ stack ]]" {
       resources {
         cpu = 100
         memory = [[ memory ]]
+        memory_max = [[ memory_max ]]
       }
     }
   }
