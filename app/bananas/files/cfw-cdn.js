@@ -1,5 +1,5 @@
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, context) {
     if (request.method !== 'GET') {
       return new Response('Method not allowed', { status: 405 });
     }
@@ -51,7 +51,11 @@ export default {
         headers,
       });
 
-      await cache.put(cacheKey, response.clone());
+      /* Cloudflare can only cache up to 512MB. We shouldn't have anything larger, but .. just be safe. */
+      if (object.size < 512 * 1024 * 1024) {
+        context.waitUntil(cache.put(cacheKey, response.clone()));
+      }
+
       response.headers.set('cf-cache-status', 'MISS');
     }
 
