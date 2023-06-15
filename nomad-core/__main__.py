@@ -76,7 +76,6 @@ permission_groups = pulumi_cloudflare.get_api_token_permission_groups()
 resources = global_stack.get_output("cloudflare_zone_id").apply(
     lambda zone_id: {f"com.cloudflare.api.account.zone.{zone_id}": "*"}
 )
-resources.apply(lambda text: pulumi.log.info(str(text)))
 nomad_service_api_token = pulumi_cloudflare.ApiToken(
     "nomad-service-api-token",
     name="nomad-core/service",
