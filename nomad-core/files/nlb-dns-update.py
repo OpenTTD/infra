@@ -102,6 +102,8 @@ async def update_nlb_dns():
             )
 
     log.info("DNS updated.")
+    global TASK
+    TASK = None
 
 
 async def update_nlb_dns_wrapper():
@@ -111,14 +113,25 @@ async def update_nlb_dns_wrapper():
         log.exception("Failed to update NLB DNS.")
 
 
+def update_nlb_dns_trigger():
+    global TASK
+
+    if TASK:
+        log.info("Cancelling update; newer update found.")
+        TASK.cancel()
+
+    TASK = LOOP.create_task(update_nlb_dns_wrapper())
+
+
 def handle_sighup(*args):
     log.info("Reloading files ...")
-    global NLB, TASK
+    global NLB
 
     nlb = json.loads(open("local/nlb.json").read())
+
     if nlb != NLB:
         NLB = nlb
-        TASK = LOOP.create_task(update_nlb_dns_wrapper())
+        LOOP.call_soon_threadsafe(update_nlb_dns_trigger)
 
 
 def main():
