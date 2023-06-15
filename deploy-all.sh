@@ -11,6 +11,8 @@ cd $(dirname $0)
 ( cd nomad-core && pulumi up -r -s prod )
 
 APP_LIST="
+bananas
+binaries
 website
 wiki
 wiki-data

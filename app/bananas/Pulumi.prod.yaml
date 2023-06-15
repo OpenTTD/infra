@@ -10,16 +10,16 @@ config:
   app-bananas:api-user-github-client-secret:
     secure: AAABAB/b5xHCGuFpQKzYJmHFlFpu/nywQ4YP2ghOipjC2PDQlP02D7f2UujbK+6aXuEsIGr9GR+JmaPpC9PG/hMGPSa4Dun7
   app-bananas:api-web-port: "11013"
-  app-bananas:hostname: bananas-new
+  app-bananas:hostname: bananas
   app-bananas:index-github-url: https://github-proxy.openttd.org/OpenTTD/BaNaNaS
   app-bananas:sentry-environment: production
-  app-bananas:server-content-hostname: content-new
+  app-bananas:server-content-hostname: content
   app-bananas:server-content-port: "11011"
   app-bananas:server-content-public-port: "3978"
   app-bananas:server-memory: "256"
   app-bananas:server-memory-max: "384"
   app-bananas:server-web-port: "11010"
-  app-bananas:web-memory: "32"
-  app-bananas:web-memory-max: "64"
+  app-bananas:web-memory: "64"
+  app-bananas:web-memory-max: "128"
   app-bananas:web-port: "11014"
   github:owner: OpenTTD

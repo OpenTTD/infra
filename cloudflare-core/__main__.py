@@ -23,10 +23,10 @@ ROUTE_MAPPING = {
     "8686": RouteMappingArgs(subdomain="nomad", protected=True),
     "10000": RouteMappingArgs(subdomain="nomad-service"),
     "11000": RouteMappingArgs(subdomain="wiki"),
-    "11010": RouteMappingArgs(subdomain="bananas-new-server"),
-    "11012": RouteMappingArgs(subdomain="bananas-new-api", path="/new-package/tus/*"),
-    "11013": RouteMappingArgs(subdomain="bananas-new-api"),
-    "11014": RouteMappingArgs(subdomain="bananas-new"),
+    "11010": RouteMappingArgs(subdomain="bananas-server"),
+    "11012": RouteMappingArgs(subdomain="bananas-api", path="/new-package/tus/*"),
+    "11013": RouteMappingArgs(subdomain="bananas-api"),
+    "11014": RouteMappingArgs(subdomain="bananas"),
     "12000": RouteMappingArgs(subdomain="wiki-preview"),
     "12010": RouteMappingArgs(subdomain="bananas-preview-server"),
     "12012": RouteMappingArgs(subdomain="bananas-preview-api", path="/new-package/tus/*"),
@@ -40,6 +40,8 @@ ROUTE_MAPPING = {
 HTTP_ALLOWED = [
     "bananas-preview-cdn",
     "binaries-preview",
+    "bananas-cdn",
+    "binaries",
 ]
 
 HTTP_ALLOWED_FQDN = global_stack.get_output("domain").apply(
