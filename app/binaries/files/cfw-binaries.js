@@ -1,5 +1,5 @@
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, context) {
     const url = new URL(request.url);
 
     /* Old OpenTTD used NSIS installer, which used this domain to fetch
@@ -40,7 +40,7 @@ export default {
           headers,
         });
 
-        await cache.put(cacheKey, response.clone());
+        context.waitUntil(cache.put(cacheKey, response.clone()));
         response.headers.set('cf-cache-status', 'MISS');
       }
 
