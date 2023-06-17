@@ -22,6 +22,7 @@ class RouteMappingArgs:
 ROUTE_MAPPING = {
     "8686": RouteMappingArgs(subdomain="nomad", protected=True),
     "10000": RouteMappingArgs(subdomain="nomad-service"),
+    "10010": RouteMappingArgs(subdomain="nomad-prom", protected=True),
     "11000": RouteMappingArgs(subdomain="wiki"),
     "11010": RouteMappingArgs(subdomain="bananas-server"),
     "11012": RouteMappingArgs(subdomain="bananas-api", path="/new-package/tus/*"),

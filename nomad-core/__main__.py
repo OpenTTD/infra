@@ -62,6 +62,15 @@ pulumi_nomad.Job(
     purge_on_destroy=True,
 )
 
+pulumi_nomad.Job(
+    "prometheus",
+    jobspec=open("files/prometheus.nomad").read(),
+    hcl2=pulumi_nomad.JobHcl2Args(
+        enabled=True,
+    ),
+    purge_on_destroy=True,
+)
+
 # This is purely to visualise the system consumes memory.
 pulumi_nomad.Job(
     "system",
