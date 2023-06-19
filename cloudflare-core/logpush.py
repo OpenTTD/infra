@@ -62,9 +62,18 @@ class LogPush(pulumi.ComponentResource):
             filter=json.dumps(
                 {
                     "where": {
-                        "key": "Outcome",
-                        "operator": "!eq",
-                        "value": "ok",
+                        "and": [
+                            {
+                                "key": "Outcome",
+                                "operator": "!eq",
+                                "value": "ok",
+                            },
+                            {
+                                "key": "Outcome",
+                                "operator": "!eq",
+                                "value": "cancelled",
+                            },
+                        ]
                     }
                 },
                 separators=(",", ":"),
