@@ -71,7 +71,7 @@ class LogPush(pulumi.ComponentResource):
                             {
                                 "key": "Outcome",
                                 "operator": "!eq",
-                                "value": "cancelled",
+                                "value": "canceled",
                             },
                         ]
                     }
