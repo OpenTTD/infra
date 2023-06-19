@@ -50,7 +50,7 @@ class LogPush(pulumi.ComponentResource):
             access_key_id=r2_token.id,
             secret_access_key=secret_access_key,
         ).apply(
-            lambda kwargs: f"r2://{kwargs['bucket_name']}?account-id={kwargs['account_id']}&access-key-id={kwargs['access_key_id']}&secret-access-key={kwargs['secret_access_key']}"
+            lambda kwargs: f"r2://{kwargs['bucket_name']}/{{DATE}}?account-id={kwargs['account_id']}&access-key-id={kwargs['access_key_id']}&secret-access-key={kwargs['secret_access_key']}"
         )
 
         pulumi_cloudflare.LogpushJob(
@@ -78,6 +78,7 @@ class LogPush(pulumi.ComponentResource):
                 },
                 separators=(",", ":"),
             ),
+            frequency="low",
             name="workers-logs",
             opts=pulumi.ResourceOptions(parent=self),
         )
