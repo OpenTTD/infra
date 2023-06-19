@@ -1,0 +1,6 @@
+name: app-dorpsgek
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - Dorpsgek

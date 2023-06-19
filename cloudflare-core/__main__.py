@@ -29,11 +29,13 @@ ROUTE_MAPPING = {
     "11012": RouteMappingArgs(subdomain="bananas-api", path="/new-package/tus/*"),
     "11013": RouteMappingArgs(subdomain="bananas-api"),
     "11014": RouteMappingArgs(subdomain="bananas"),
+    "11020": RouteMappingArgs(subdomain="dorpsgek"),
     "12000": RouteMappingArgs(subdomain="wiki-preview"),
     "12010": RouteMappingArgs(subdomain="bananas-preview-server"),
     "12012": RouteMappingArgs(subdomain="bananas-preview-api", path="/new-package/tus/*"),
     "12013": RouteMappingArgs(subdomain="bananas-preview-api"),
     "12014": RouteMappingArgs(subdomain="bananas-preview"),
+    "12020": RouteMappingArgs(subdomain="dorpsgek-preview"),
 }
 
 # Subdomains where HTTP is allowed.
@@ -107,6 +109,18 @@ proxy.Proxy(
         account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"github-api-proxy.{domain}"),
         proxy_to=pulumi.Output.from_input("api.github.com"),
+        type="transparent",
+        whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
+        zone_id=global_stack.get_output("cloudflare_zone_id"),
+    ),
+)
+
+proxy.Proxy(
+    "discord-proxy",
+    proxy.ProxyArgs(
+        account_id=global_stack.get_output("cloudflare_account_id"),
+        hostname=global_stack.get_output("domain").apply(lambda domain: f"discord-proxy.{domain}"),
+        proxy_to=pulumi.Output.from_input("discord.com"),
         type="transparent",
         whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
         zone_id=global_stack.get_output("cloudflare_zone_id"),
