@@ -3,6 +3,7 @@ import pulumi_cloudflare
 
 from dataclasses import dataclass
 
+import logpush
 import proxy
 import tunnel
 
@@ -150,6 +151,13 @@ for port, route in ROUTE_MAPPING.items():
     )
 
 t.create_routes()
+
+logpush.LogPush(
+    "logpush",
+    logpush.LogPushArgs(
+        cloudflare_account_id=global_stack.get_output("cloudflare_account_id"),
+    ),
+)
 
 pulumi.export("tunnel_token", t.tunnel.tunnel_token)
 pulumi.export("service_token_id", t.service_token.client_id)

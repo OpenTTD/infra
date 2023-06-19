@@ -23,6 +23,7 @@ worker = pulumi_cloudflare.WorkerScript(
         .replace("[[ hostname ]]", config.require("bananas_hostname"))
         .replace("[[ domain ]]", domain)
     ),
+    logpush=True,
     name=name,
     module=True,
     r2_bucket_bindings=[

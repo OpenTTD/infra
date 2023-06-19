@@ -34,6 +34,7 @@ class Proxy(pulumi.ComponentResource):
             content=args.proxy_to.apply(
                 lambda proxy_to: open(f"files/proxy_{args.type}.js").read().replace("[[ hostname ]]", proxy_to)
             ),
+            logpush=True,
             name=name,
             module=True,
             opts=pulumi.ResourceOptions(parent=self),

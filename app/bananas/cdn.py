@@ -34,6 +34,7 @@ class Cdn(pulumi.ComponentResource):
             f"worker",
             account_id=args.cloudflare_account_id,
             content=open(f"files/cfw-cdn.js").read(),
+            logpush=True,
             name=name,
             module=True,
             r2_bucket_bindings=[
