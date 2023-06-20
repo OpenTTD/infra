@@ -30,12 +30,14 @@ ROUTE_MAPPING = {
     "11013": RouteMappingArgs(subdomain="bananas-api"),
     "11014": RouteMappingArgs(subdomain="bananas"),
     "11020": RouteMappingArgs(subdomain="dorpsgek"),
+    "11030": RouteMappingArgs(subdomain="translator"),
     "12000": RouteMappingArgs(subdomain="wiki-preview"),
     "12010": RouteMappingArgs(subdomain="bananas-preview-server"),
     "12012": RouteMappingArgs(subdomain="bananas-preview-api", path="/new-package/tus/*"),
     "12013": RouteMappingArgs(subdomain="bananas-preview-api"),
     "12014": RouteMappingArgs(subdomain="bananas-preview"),
     "12020": RouteMappingArgs(subdomain="dorpsgek-preview"),
+    "12030": RouteMappingArgs(subdomain="translator-preview"),
 }
 
 # Subdomains where HTTP is allowed.

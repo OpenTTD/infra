@@ -1,0 +1,13 @@
+config:
+  app-eints:github-oauth2-client-id: 83be11023d509b6eedc7
+  app-eints:github-oauth2-client-secret:
+    secure: AAABAE+KgZziyHajuAdVF2IKAfJCAHe2t7rfcc6N+HNSNkLT/ESjAPNhDdDoerKXLyCys3M6NXD5C7oo4i2UmWG7SGM3iCpn
+  app-eints:github-org-api-token:
+    secure: AAABACTwtUhbSPDWHaUe7SVcld+VOwTLrC/KQoQpzAxjZetpNSDjCPsdE/p9NEOLV8LjByZS48RTuMfeZTto1BVdJJ1vwHRZ
+  app-eints:hostname: translator
+  app-eints:memory: "512"
+  app-eints:memory-max: "640"
+  app-eints:port: "11030"
+  app-eints:sentry-environment: production
+  app-eints:workflow-github-url: https://github.com/OpenTTD/workflows
+  github:owner: OpenTTD

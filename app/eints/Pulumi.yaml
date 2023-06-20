@@ -1,0 +1,6 @@
+name: app-eints
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - Eints
