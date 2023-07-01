@@ -1,0 +1,6 @@
+name: app-cdn
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - CDN

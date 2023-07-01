@@ -13,6 +13,7 @@ cd $(dirname $0)
 APP_LIST="
 bananas
 binaries
+cdn
 website
 wiki
 wiki-data

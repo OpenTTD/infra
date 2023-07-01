@@ -5,4 +5,5 @@ pulumi-cloudflare
 pulumi-github
 pulumi-nomad
 pulumi-random
+pulumi-tls
 pulumiverse_sentry

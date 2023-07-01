@@ -1,0 +1,10 @@
+config:
+  app-cdn:hostname: cdn-preview
+  app-cdn:whitelist-upload-folders:
+    opengfx-nightlies: OpenGFX
+    opengfx-releases: OpenGFX
+    openttd-branches: OpenTTD
+    openttd-nightlies: OpenTTD
+    openttd-releases: OpenTTD
+  app-cdn:workflows-repository: workflows
+  github:owner: OpenTTD

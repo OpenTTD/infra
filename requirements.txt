@@ -17,6 +17,7 @@ pulumi-cloudflare==5.4.1
 pulumi-github==5.12.0
 pulumi-nomad==0.4.1
 pulumi-random==4.13.2
+pulumi-tls==4.10.0
 pulumiverse-sentry==0.0.8
 PyYAML==6.0
 semver==2.13.0

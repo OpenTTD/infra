@@ -55,8 +55,13 @@ Now you should be able to execute `nomad node status` and get a valid response.
 
 ### Applications (Pulumi)
 
-- [wiki](./app/wiki): OpenTTD's wiki
+- [bananas](./app/bananas): OpenTTD's BaNaNaS (CDN + server + api + web)
+- [binaries](./app/binaries): OpenTTD's old binaries domain
+- [cdn](./app/cdn): OpenTTD's CDN (for releases)
+- [dorpsgek](./app/dorpsgek): OpenTTD's DorpsGek (Discord / IRC bot to inform about GitHub activity)
+- [eints](./app/eints): OpenTTD's translator tool
 - [website](./app/website): OpenTTD's website
+- [wiki](./app/wiki): OpenTTD's wiki
 
 ### Others
 
