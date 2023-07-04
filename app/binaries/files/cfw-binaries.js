@@ -35,6 +35,10 @@ export default {
         /* Cache for a year. */
         headers.set('cache-control', 'public, max-age=31536000, immutable');
         headers.set('etag', object.httpEtag);
+        /* Set CORS headers for emscripten files, as they are always cross-domain. */
+        if (objectName.startsWith('emscripten/')) {
+          headers.set('access-control-allow-origin', '*');
+        }
 
         response = new Response(object.body, {
           headers,
