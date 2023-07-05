@@ -11,8 +11,18 @@ config = pulumi.Config()
 pulumi_openttd.autotag.register()
 
 PUBLIC_PORTS = [
+    ("tcp", 3973),  # turn-2
+    ("tcp", 3974),  # turn-1
+    ("tcp", 3975),  # stun
+    ("tcp", 3976),  # coordinator
     ("tcp", 3978),  # bananas-server
+    ("udp", 3978),  # master
+    ("tcp", 4973),  # turn-preview-2
+    ("tcp", 4974),  # turn-preview-1
+    ("tcp", 4975),  # stun-preview
+    ("tcp", 4976),  # coordinator-preview
     ("tcp", 4978),  # bananas-server-preview
+    ("udp", 4978),  # master-preview
 ]
 
 network = network.Network(

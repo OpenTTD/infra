@@ -14,6 +14,7 @@ APP_LIST="
 bananas
 binaries
 cdn
+multiplayer
 website
 wiki
 wiki-data

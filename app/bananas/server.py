@@ -97,10 +97,9 @@ class Server(pulumi.ComponentResource):
             opts=pulumi.ResourceOptions(parent=self),
         )
 
-        nlb_hostname = pulumi.Output.format("{}.{}", args.content_hostname, args.domain)
         pulumi_cloudflare.Record(
             f"server-dns",
-            name=nlb_hostname,
+            name=pulumi.Output.format("{}.{}", args.content_hostname, args.domain),
             proxied=False,
             type="CNAME",
             value="nlb.openttd.org",

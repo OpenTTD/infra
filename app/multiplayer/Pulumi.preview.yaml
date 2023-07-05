@@ -1,0 +1,34 @@
+config:
+  app-multiplayer:api-memory-max: "192"
+  app-multiplayer:api-memory: "96"
+  app-multiplayer:api-port: "12045"
+  app-multiplayer:coordinator-hostname: coordinator-preview
+  app-multiplayer:coordinator-memory-max: "128"
+  app-multiplayer:coordinator-memory: "64"
+  app-multiplayer:coordinator-port: "12040"
+  app-multiplayer:coordinator-public-port: "4976"
+  app-multiplayer:master-hostname: master-preview
+  app-multiplayer:master-memory-max: "128"
+  app-multiplayer:master-memory: "64"
+  app-multiplayer:master-port: "12044"
+  app-multiplayer:master-public-port: "4978"
+  app-multiplayer:sentry-environment: preview
+  app-multiplayer:shared-secret:
+    secure: AAABAHsjcxOC8aEnw1eQOzR4q+fs9GtO+rl027PwwusBGDnrcfCjpgEPIdt89Qji9L4Cey4i99pvur3vzQdIVA==
+  app-multiplayer:stun-hostname: stun-preview
+  app-multiplayer:stun-memory: "64"
+  app-multiplayer:stun-memory-max: "128"
+  app-multiplayer:stun-port: "12041"
+  app-multiplayer:stun-public-port: "4975"
+  app-multiplayer:turn-1-port: "12042"
+  app-multiplayer:turn-1-public-port: "4974"
+  app-multiplayer:turn-2-port: "12043"
+  app-multiplayer:turn-2-public-port: "4973"
+  app-multiplayer:turn-hostname: turn-preview
+  app-multiplayer:turn-memory: "64"
+  app-multiplayer:turn-memory-max: "128"
+  app-multiplayer:web-hostname: servers-preview
+  app-multiplayer:web-memory-max: "192"
+  app-multiplayer:web-memory: "96"
+  app-multiplayer:web-port: "12046"
+  github:owner: OpenTTD

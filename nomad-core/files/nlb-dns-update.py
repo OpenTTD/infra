@@ -18,44 +18,12 @@ LOOP = None
 
 log = logging.getLogger(__name__)
 
-
-async def update_nlb_dns():
-    log.info("NLB configuration changed, updating DNS ...")
-
-    ip_mapping = json.loads(
-        subprocess.run(
-            shlex.split(
-                "aws --region eu-west-1 ec2 describe-instances --query 'Reservations[].Instances[].{private:PrivateIpAddress,public_v4:PublicIpAddress,public_v6:NetworkInterfaces[0].Ipv6Prefixes[0].Ipv6Prefix}'"
-            ),
-            check=True,
-            stdout=subprocess.PIPE,
-        ).stdout
-    )
-
-    # Map the private IP addresses to the public IP addresses.
-    ips = []
-    for nlb in NLB:
-        if not nlb:
-            continue
-
-        for ip_map in ip_mapping:
-            if ip_map["private"] == nlb:
-                ips.append(("A", ip_map["public_v4"]))
-                ips.append(("AAAA", ip_map["public_v6"].replace("::/80", "::1")))
-                break
-        else:
-            log.warning(f"Could not find public IP for NLB {nlb}")
-
-    log.info(f"IPs detected:")
-    for ip in ips:
-        log.info(f"  {ip[1]}")
-    log.info("")
-
+async def update_dns(domain, ips):
     # First request all current entries (so we can remove them).
     async with aiohttp.ClientSession() as session:
         response = await session.get(
             f"https://api.cloudflare.com/client/v4/zones/[[ cloudflare_zone_id ]]/dns_records",
-            params={"name": "nlb.openttd.org"},
+            params={"name": domain},
             headers={
                 "Content-Type": "application/json",
                 "Authorization": "Bearer [[ cloudflare_api_token ]]",
@@ -89,7 +57,7 @@ async def update_nlb_dns():
                 f"https://api.cloudflare.com/client/v4/zones/[[ cloudflare_zone_id ]]/dns_records",
                 json={
                     "type": ip[0],
-                    "name": "nlb.openttd.org",
+                    "name": domain,
                     "content": ip[1],
                     "ttl": 60,
                     "proxied": False,
@@ -100,6 +68,59 @@ async def update_nlb_dns():
                 },
                 raise_for_status=True,
             )
+
+
+async def update_nlb_dns():
+    log.info("NLB configuration changed, updating DNS ...")
+
+    ip_mapping = json.loads(
+        subprocess.run(
+            shlex.split(
+                "aws --region eu-west-1 ec2 describe-instances --query 'Reservations[].Instances[].{private:PrivateIpAddress,public_v4:PublicIpAddress,public_v6:NetworkInterfaces[0].Ipv6Prefixes[0].Ipv6Prefix}'"
+            ),
+            check=True,
+            stdout=subprocess.PIPE,
+        ).stdout
+    )
+
+    # Map the private IP addresses to the public IP addresses.
+    ips = []
+    for nlb in NLB:
+        if not nlb:
+            continue
+
+        for ip_map in ip_mapping:
+            if ip_map["private"] == nlb:
+                ips.append(("A", ip_map["public_v4"]))
+                ips.append(("AAAA", ip_map["public_v6"].replace("::/80", "::1")))
+                break
+        else:
+            log.warning(f"Could not find public IP for NLB {nlb}")
+
+    log.info(f"Public IPs detected:")
+    for ip in ips:
+        log.info(f"  {ip[1]}")
+    log.info("")
+
+    await update_dns("nlb.openttd.org", ips)
+
+    # Also create a DNS entry for the internal IP addresses. This is not ideal,
+    # as you tell the outside world what your internal IP addresses are, but it
+    # is by far the simplest way to get a round-robin DNS for the internal
+    # services.
+    ips = []
+    for nlb in NLB:
+        if not nlb:
+            continue
+
+        ips.append(("A", nlb))
+
+    log.info(f"Internal IPs detected:")
+    for ip in ips:
+        log.info(f"  {ip[1]}")
+    log.info("")
+
+    await update_dns("nlb-internal.openttd.org", ips)
 
     log.info("DNS updated.")
     global TASK

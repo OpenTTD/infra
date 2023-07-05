@@ -112,16 +112,16 @@ stream {
   }
 
   server {
-    listen {{ $port }} {{- if in .Tags "protocol=udp" -}}udp{{- end -}};
-    listen [::]:{{ $port }} {{- if in .Tags "protocol=udp" -}}udp{{- end -}};
+    listen {{ $port }} {{- if in .Tags "protocol=udp" }} udp{{ end -}};
+    listen [::]:{{ $port }} {{- if in .Tags "protocol=udp" }} udp{{ end -}};
 
     proxy_pass {{ .Name | toLower }};
     proxy_protocol on;
 
-    {{- if in .Tags "protocol=udp" }}
-      proxy_requests 1;
-      proxy_timeout 30s;
-    {{- end }}
+  {{- if in .Tags "protocol=udp" }}
+    proxy_requests 1;
+    proxy_timeout 30s;
+  {{- end }}
   }
 
 {{ end }}
