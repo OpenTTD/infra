@@ -10,11 +10,11 @@ grpcio==1.51.3
 idna==3.4
 multidict==6.0.4
 parver==0.4
-protobuf==4.23.3
-pulumi==3.72.2
+protobuf==4.23.4
+pulumi==3.74.0
 pulumi-aws==5.41.0
-pulumi-cloudflare==5.4.1
-pulumi-github==5.12.0
+pulumi-cloudflare==5.5.0
+pulumi-github==5.14.0
 pulumi-nomad==0.4.1
 pulumi-random==4.13.2
 pulumi-tls==4.10.0
