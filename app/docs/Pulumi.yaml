@@ -1,0 +1,6 @@
+name: app-docs
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - Docs

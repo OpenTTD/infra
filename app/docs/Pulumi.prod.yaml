@@ -1,0 +1,4 @@
+config:
+  app-docs:hostname: docs
+  app-docs:name: openttd-docs
+  github:owner: OpenTTD

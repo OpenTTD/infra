@@ -14,6 +14,9 @@ APP_LIST="
 bananas
 binaries
 cdn
+docs
+dorpsgek
+eints
 multiplayer
 website
 wiki
