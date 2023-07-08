@@ -19,6 +19,7 @@ dorpsgek
 eints
 multiplayer
 preview
+redirect
 website
 wiki
 wiki-data

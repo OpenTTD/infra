@@ -1,0 +1,6 @@
+name: app-redirect
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - redirect

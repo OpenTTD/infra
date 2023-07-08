@@ -1,0 +1,4 @@
+config:
+  app-redirect:alt-cloudflare-zone-id:
+    secure: AAABAHwSg/3GWpSbP6BwDjgYnt/NAXU1waDEM1YCIKDnpBLAVoCC7gXJpPxb3uh2yhZWWfJ2/Tm7ZmvzijbDcQ==
+  app-redirect:alt-domain: openttd.com
