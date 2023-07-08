@@ -61,6 +61,7 @@ Now you should be able to execute `nomad node status` and get a valid response.
 - [docs](./app/docs): OpenTTD's docs
 - [dorpsgek](./app/dorpsgek): OpenTTD's DorpsGek (Discord / IRC bot to inform about GitHub activity)
 - [eints](./app/eints): OpenTTD's translator tool
+- [preview](./app/preview): OpenTTD's previews
 - [website](./app/website): OpenTTD's website
 - [wiki](./app/wiki): OpenTTD's wiki
 

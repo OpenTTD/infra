@@ -18,6 +18,7 @@ docs
 dorpsgek
 eints
 multiplayer
+preview
 website
 wiki
 wiki-data

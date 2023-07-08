@@ -1,0 +1,4 @@
+config:
+  app-preview:hostname: preview
+  app-preview:name: openttd-preview
+  github:owner: OpenTTD
