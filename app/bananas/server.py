@@ -57,11 +57,8 @@ class Server(pulumi.ComponentResource):
         cdn_fallback_url = pulumi.Output.format("https://{}-cdn.{}", args.hostname, args.domain)
         sentry_key = pulumi_openttd.get_sentry_key("bananas-server", args.sentry_ingest_hostname, args.domain)
 
-        # For production, make sure the bootstrap request returns OpenGFX.
-        if pulumi.get_stack() == "prod":
-            boostrap_command = '"--bootstrap-unique-id", "4f474658",'
-        else:
-            boostrap_command = ""
+        # Make sure the bootstrap request returns OpenGFX.
+        boostrap_command = '"--bootstrap-unique-id", "4f474658",'
 
         SETTINGS = {
             "bootstrap_command": boostrap_command,
