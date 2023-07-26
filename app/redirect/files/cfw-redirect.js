@@ -17,11 +17,18 @@ export default {
          *  https://bugs.openttd.org/
          *  https://bugs.openttd.org/task/1234
          *  https://bugs.openttd.org/task/1234.html
+         *  https://bugs.openttd.org/task/15/getfile/8/append_version_to_help.patch
          */
 
         const task = url.pathname.match(/^\/task\/(\d+)(\.html)?$/);
         if (task) {
           return Response.redirect(`https://github.com/OpenTTD/OpenTTD/issues/${task[1]}`, 301);
+        }
+
+        /* Attachments are stored in the flyspray-archive GitHub repository. */
+        const attachment = url.pathname.match(/^\/task\/(\d+)\/getfile\/(\d+)\/(.*)$/);
+        if (attachment) {
+          return Response.redirect(`https://github.com/OpenTTD/flyspray-archive/raw/main/task/${attachment[1]}/getfile/${attachment[2]}/${attachment[3]}`, 301);
         }
 
         return Response.redirect('https://github.com/OpenTTD/OpenTTD/issues', 301);
