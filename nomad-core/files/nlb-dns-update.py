@@ -17,6 +17,7 @@ LOOP = None
 
 log = logging.getLogger(__name__)
 
+
 async def update_dns(domain, ips):
     # First request all current entries (so we can remove them).
     async with aiohttp.ClientSession() as session:
@@ -73,7 +74,10 @@ async def update_nlb_dns():
     log.info("NLB configuration changed, updating DNS ...")
 
     proc = await asyncio.create_subprocess_exec(
-        "aws", *shlex.split("--region eu-west-1 ec2 describe-instances --query 'Reservations[].Instances[].{private:PrivateIpAddress,public_v4:PublicIpAddress,public_v6:NetworkInterfaces[0].Ipv6Prefixes[0].Ipv6Prefix}'"),
+        "aws",
+        *shlex.split(
+            "--region eu-west-1 ec2 describe-instances --query 'Reservations[].Instances[].{private:PrivateIpAddress,public_v4:PublicIpAddress,public_v6:NetworkInterfaces[0].Ipv6Prefixes[0].Ipv6Prefix}'"
+        ),
         stdout=asyncio.subprocess.PIPE,
     )
     if await proc.wait() != 0:

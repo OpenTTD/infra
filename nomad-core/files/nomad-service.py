@@ -83,7 +83,8 @@ async def autoscaling_handler(request):
                     command_args = shlex.split(command)
 
                     proc = await asyncio.create_subprocess_exec(
-                        command_args[0], *command_args[1:],
+                        command_args[0],
+                        *command_args[1:],
                         stdout=asyncio.subprocess.PIPE,
                     )
 
@@ -94,7 +95,9 @@ async def autoscaling_handler(request):
                     return (await proc.stdout.read()).decode().strip()
 
                 # Get the Private IP DNS name of the instance.
-                instance_name = await execute(f"aws ec2 describe-instances --instance-ids {instance} --query 'Reservations[0].Instances[0].PrivateDnsName' --output text")
+                instance_name = await execute(
+                    f"aws ec2 describe-instances --instance-ids {instance} --query 'Reservations[0].Instances[0].PrivateDnsName' --output text"
+                )
                 if not instance_name:
                     log.error(f"No instance name found for {instance}")
                     return web.HTTPOk()
@@ -114,7 +117,9 @@ async def autoscaling_handler(request):
                 await execute(f"nomad node drain -yes -enable {node_id}")
 
                 # Mark the node as ready for termination.
-                await execute(f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {message['LifecycleHookName']} --auto-scaling-group-name {message['AutoScalingGroupName']}")
+                await execute(
+                    f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {message['LifecycleHookName']} --auto-scaling-group-name {message['AutoScalingGroupName']}"
+                )
 
         return web.HTTPOk()
 
@@ -140,7 +145,8 @@ async def autoscaling_handler(request):
         command_args = shlex.split(command)
 
         proc = await asyncio.create_subprocess_exec(
-            command_args[0], *command_args[1:],
+            command_args[0],
+            *command_args[1:],
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
         )
@@ -165,7 +171,9 @@ async def autoscaling_handler(request):
 
     if state == "Continue":
         lifecycle_hook_name = payload["lifecycle-hook-name"]
-        await execute(f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {lifecycle_hook_name} --auto-scaling-group-name {service}")
+        await execute(
+            f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {lifecycle_hook_name} --auto-scaling-group-name {service}"
+        )
 
     return response
 
@@ -233,12 +241,14 @@ async def deploy_handler(request):
 
         if capture:
             proc = await asyncio.create_subprocess_exec(
-                command_args[0], *command_args[1:],
+                command_args[0],
+                *command_args[1:],
                 stdout=asyncio.subprocess.PIPE,
             )
         else:
             proc = await asyncio.create_subprocess_exec(
-                command_args[0], *command_args[1:],
+                command_args[0],
+                *command_args[1:],
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.STDOUT,
             )
@@ -271,7 +281,9 @@ async def deploy_handler(request):
 
     # Read the jobspec.
     await reply(f"\nRetrieving jobspec for {service} ...\n")
-    jobspec = await execute(f"nomad var get -out go-template -template '{{{{ .Items.jobspec }}}}' app/{service}/jobspec", True)
+    jobspec = await execute(
+        f"nomad var get -out go-template -template '{{{{ .Items.jobspec }}}}' app/{service}/jobspec", True
+    )
     jobspec = base64.b64decode(jobspec).decode()
 
     # Replace all the variables.
