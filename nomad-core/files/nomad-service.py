@@ -1,16 +1,16 @@
 #!/bin/env python3
 
 """
-
+Handles several endpoints related to deploying new software on the Nomad cluster.
 """
 
 import aiohttp
+import asyncio
 import base64
 import json
 import logging
 import shlex
 import signal
-import subprocess
 import sys
 
 from aiohttp import web
@@ -55,6 +55,12 @@ async def autoscaling_handler(request):
 
     if "x-amz-sns-topic-arn" in request.headers:
         type = payload["Type"]
+        log.info(f"Receiving SNS notification: {type}")
+
+        if service not in SERVICE_KEYS or SERVICE_KEYS[service]["key"] != key:
+            log.error("Invalid service or service key")
+            return web.HTTPOk()
+
         if type == "SubscriptionConfirmation":
             url = payload["SubscribeURL"]
             async with aiohttp.ClientSession() as session:
@@ -68,56 +74,47 @@ async def autoscaling_handler(request):
             if "LifecycleTransition" not in message:
                 return web.HTTPOk()
 
+            log.info(f"SNS notification is an autoscaling notification: {message['LifecycleTransition']}")
+
             if message["LifecycleTransition"] == "autoscaling:EC2_INSTANCE_TERMINATING":
                 instance = message["EC2InstanceId"]
 
-                # Get the Private IP DNS name of the instance.
-                instance_name = (
-                    subprocess.run(
-                        shlex.split(
-                            f"aws ec2 describe-instances --instance-ids {instance} --query 'Reservations[0].Instances[0].PrivateDnsName' --output text"
-                        ),
-                        check=True,
-                        stdout=subprocess.PIPE,
+                async def execute(command):
+                    command_args = shlex.split(command)
+
+                    proc = await asyncio.create_subprocess_exec(
+                        command_args[0], *command_args[1:],
+                        stdout=asyncio.subprocess.PIPE,
                     )
-                    .stdout.decode()
-                    .strip()
-                )
+
+                    if await proc.wait() != 0:
+                        log.error(f"Executing {command} failed.\n")
+                        raise web.HTTPOk()
+
+                    return (await proc.stdout.read()).decode().strip()
+
+                # Get the Private IP DNS name of the instance.
+                instance_name = await execute(f"aws ec2 describe-instances --instance-ids {instance} --query 'Reservations[0].Instances[0].PrivateDnsName' --output text")
                 if not instance_name:
+                    log.error(f"No instance name found for {instance}")
                     return web.HTTPOk()
 
                 # Find the node ID of the instance.
-                node_id = (
-                    subprocess.run(
-                        shlex.split(f"nomad node status -filter '\"{instance_name}\" in Name' -quiet"),
-                        check=True,
-                        stdout=subprocess.PIPE,
-                    )
-                    .stdout.decode()
-                    .strip()
-                )
+                node_id = await execute(f"nomad node status -filter '\"{instance_name}\" in Name' -quiet")
                 if not node_id:
+                    log.error(f"No node ID found for {instance_name}")
                     return web.HTTPOk()
 
+                log.info(f"Removing {instance} ({instance_name}) with node ID {node_id} from the cluster")
+
                 # Make sure no new jobs are scheduled on the instance.
-                subprocess.run(
-                    shlex.split(f"nomad node eligibility -disable {node_id}"),
-                    check=True,
-                )
+                await execute(f"nomad node eligibility -disable {node_id}")
 
                 # Drain the instance (including system jobs).
-                subprocess.run(
-                    shlex.split(f"nomad node drain -yes -enable {node_id}"),
-                    check=True,
-                )
+                await execute(f"nomad node drain -yes -enable {node_id}")
 
                 # Mark the node as ready for termination.
-                subprocess.run(
-                    shlex.split(
-                        f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {message['LifecycleHookName']} --auto-scaling-group-name {message['AutoScalingGroupName']}"
-                    ),
-                    check=True,
-                )
+                await execute(f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {message['LifecycleHookName']} --auto-scaling-group-name {message['AutoScalingGroupName']}")
 
         return web.HTTPOk()
 
@@ -140,30 +137,35 @@ async def autoscaling_handler(request):
         await response.write(message.encode())
 
     async def execute(command):
-        with subprocess.Popen(
-            shlex.split(command),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        ) as proc:
-            for line in proc.stdout:
-                await reply(line.decode())
-            return proc.wait() == 0
+        command_args = shlex.split(command)
+
+        proc = await asyncio.create_subprocess_exec(
+            command_args[0], *command_args[1:],
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+
+        while True:
+            line = await proc.stdout.readline()
+            if not line:
+                break
+            await reply(line.decode())
+
+        if await proc.wait() != 0:
+            await reply(f"ERROR: Executing {command} failed.\n")
+            raise web.HTTPInternalServerError()
+
+    log.info(f"Received {state} state for {instance} in {service}")
 
     if state == "Healthy":
-        if not await execute(f"aws autoscaling set-instance-health --instance-id {instance} --health-status Healthy"):
-            await reply("Failed to mark instance healthy")
+        await execute(f"aws autoscaling set-instance-health --instance-id {instance} --health-status Healthy")
 
     if state == "Unhealthy":
-        if not await execute(f"aws autoscaling set-instance-health --instance-id {instance} --health-status Unhealthy"):
-            await reply("Failed to mark instance unhealthy")
+        await execute(f"aws autoscaling set-instance-health --instance-id {instance} --health-status Unhealthy")
 
     if state == "Continue":
         lifecycle_hook_name = payload["lifecycle-hook-name"]
-
-        if not await execute(
-            f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {lifecycle_hook_name} --auto-scaling-group-name {service}"
-        ):
-            await reply("Failed to send lifecycle action")
+        await execute(f"aws autoscaling complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id {instance} --lifecycle-hook-name {lifecycle_hook_name} --auto-scaling-group-name {service}")
 
     return response
 
@@ -226,40 +228,50 @@ async def deploy_handler(request):
     async def reply(message):
         await response.write(message.encode())
 
+    async def execute(command, capture):
+        command_args = shlex.split(command)
+
+        if capture:
+            proc = await asyncio.create_subprocess_exec(
+                command_args[0], *command_args[1:],
+                stdout=asyncio.subprocess.PIPE,
+            )
+        else:
+            proc = await asyncio.create_subprocess_exec(
+                command_args[0], *command_args[1:],
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+
+            while True:
+                line = await proc.stdout.readline()
+                if not line:
+                    break
+                await reply(line.decode())
+
+        if await proc.wait() != 0:
+            await reply(f"ERROR: Executing {command} failed.\n")
+            raise web.HTTPInternalServerError()
+
+        if capture:
+            return await proc.stdout.read()
+
     # Set the new version; double-escape the first @, as a @ has special meaning for "nomad var put".
     await reply(f"Setting new version to {version} ...\n")
     if version.startswith("@"):
         safe_version = f"\\\\@{version[1:]}"
     else:
         safe_version = version
-    with subprocess.Popen(
-        shlex.split(f"nomad var put -force app/{service}/version version={safe_version}"),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    ) as proc:
-        for line in proc.stdout:
-            await reply(line.decode())
-        if proc.wait() != 0:
-            await reply("ERROR: Setting new version failed.\n")
-            raise web.HTTPInternalServerError()
+    await execute(f"nomad var put -force app/{service}/version version={safe_version}", False)
 
     # Retrieve the settings.
     await reply(f"\nRetrieving settings for {service} ...\n")
-    settings = json.loads(
-        subprocess.run(
-            shlex.split(f"nomad var get -out json app/{service}/settings"),
-            stdout=subprocess.PIPE,
-            check=True,
-        ).stdout
-    )["Items"]
+    settings_raw = await execute(f"nomad var get -out json app/{service}/settings", True)
+    settings = json.loads(settings_raw)["Items"]
 
     # Read the jobspec.
     await reply(f"\nRetrieving jobspec for {service} ...\n")
-    jobspec = subprocess.run(
-        shlex.split(f"nomad var get -out go-template -template '{{{{ .Items.jobspec }}}}' app/{service}/jobspec"),
-        stdout=subprocess.PIPE,
-        check=True,
-    ).stdout
+    jobspec = await execute(f"nomad var get -out go-template -template '{{{{ .Items.jobspec }}}}' app/{service}/jobspec", True)
     jobspec = base64.b64decode(jobspec).decode()
 
     # Replace all the variables.
@@ -272,16 +284,7 @@ async def deploy_handler(request):
     await reply(f"\nUpdating job {service} with new jobspec ...\n")
     with open(f"local/{service}.nomad", "w") as fp:
         fp.write(jobspec)
-    with subprocess.Popen(
-        shlex.split(f"nomad job run local/{service}.nomad"),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    ) as proc:
-        for line in proc.stdout:
-            await reply(line.decode())
-        if proc.wait() != 0:
-            await reply("ERROR: Deploying new version failed.\n")
-            raise web.HTTPInternalServerError()
+    await execute(f"nomad job run local/{service}.nomad", False)
 
     await reply(f"\nDeployed {version} to {service}\n")
     return response

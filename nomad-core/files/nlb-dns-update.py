@@ -10,7 +10,6 @@ import json
 import logging
 import shlex
 import signal
-import subprocess
 
 NLB = []
 TASK = None
@@ -73,15 +72,15 @@ async def update_dns(domain, ips):
 async def update_nlb_dns():
     log.info("NLB configuration changed, updating DNS ...")
 
-    ip_mapping = json.loads(
-        subprocess.run(
-            shlex.split(
-                "aws --region eu-west-1 ec2 describe-instances --query 'Reservations[].Instances[].{private:PrivateIpAddress,public_v4:PublicIpAddress,public_v6:NetworkInterfaces[0].Ipv6Prefixes[0].Ipv6Prefix}'"
-            ),
-            check=True,
-            stdout=subprocess.PIPE,
-        ).stdout
+    proc = await asyncio.create_subprocess_exec(
+        "aws", *shlex.split("--region eu-west-1 ec2 describe-instances --query 'Reservations[].Instances[].{private:PrivateIpAddress,public_v4:PublicIpAddress,public_v6:NetworkInterfaces[0].Ipv6Prefixes[0].Ipv6Prefix}'"),
+        stdout=asyncio.subprocess.PIPE,
     )
+    if await proc.wait() != 0:
+        log.warning("Failed to get IP mapping")
+        return
+
+    ip_mapping = json.loads(await proc.stdout.read())
 
     # Map the private IP addresses to the public IP addresses.
     ips = []
