@@ -238,7 +238,7 @@ fi
         pulumi_aws.sns.TopicSubscription(
             f"{name}-sns-subscription",
             endpoint=nomad_service_key.result.apply(
-                lambda service_keys: f"https://nomad-service.openttd.org/autoscaling/{name}/{service_keys}"
+                lambda service_keys: f"https://nomad-service.openttd.org/autoscaling/{name}-asg/{service_keys}"
             ),
             protocol="https",
             topic=sns.arn,
