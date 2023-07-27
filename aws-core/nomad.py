@@ -88,14 +88,6 @@ curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nom
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-rc.local -o /etc/rc.d/rc.local
 chmod +x /etc/rc.d/rc.local
 
-# Download a patched version of v1.5.6 to fix a bug with cgroupv2 and exec driver.
-if [ "$(nomad --version | head -n 1 | cut -d\  -f2)" = "v1.5.6" ]; then
-    curl -sL https://raw.githubusercontent.com/OpenTTD/infra-patches/main/nomad-v1.5.6-arm64.gz -o /tmp/nomad.gz
-    gunzip /tmp/nomad.gz
-    chmod 0755 /tmp/nomad
-    mv /tmp/nomad /usr/bin/nomad
-fi
-
 systemctl enable rc-local
 systemctl start rc-local
 systemctl enable nomad
