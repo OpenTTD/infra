@@ -100,8 +100,72 @@ nomad.Nomad(
     ),
 )
 
+s3_datasync = pulumi_aws.s3.BucketV2(
+    "datasync",
+    bucket="openttd-datasync",
+)
+
+s3_datasync_iam_policy = pulumi_aws.iam.Policy(
+    "datasync-iam-policy",
+    name="datasync-policy",
+    policy=pulumi_aws.iam.get_policy_document(
+        statements=[
+            pulumi_aws.iam.GetPolicyDocumentStatementArgs(
+                actions=[
+                    "s3:GetBucketLocation",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                ],
+                resources=[s3_datasync.arn],
+                effect="Allow",
+            ),
+            pulumi_aws.iam.GetPolicyDocumentStatementArgs(
+                actions=[
+                    "s3:AbortMultipartUpload",
+                    "s3:DeleteObject",
+                    "s3:GetObject",
+                    "s3:ListMultipartUploadParts",
+                    "s3:GetObjectTagging",
+                    "s3:PutObjectTagging",
+                    "s3:PutObject",
+                ],
+                resources=[pulumi.Output.format("{}/*", s3_datasync.arn)],
+                effect="Allow",
+            ),
+        ],
+    ).json,
+    opts=pulumi.ResourceOptions(),
+)
+
+s3_datasync_iam = pulumi_aws.iam.Role(
+    "datasync-iam-role",
+    assume_role_policy=pulumi_aws.iam.get_policy_document(
+        statements=[
+            pulumi_aws.iam.GetPolicyDocumentStatementArgs(
+                actions=["sts:AssumeRole"],
+                principals=[
+                    pulumi_aws.iam.GetPolicyDocumentStatementPrincipalArgs(
+                        type="Service",
+                        identifiers=["datasync.amazonaws.com"],
+                    ),
+                ],
+                effect="Allow",
+            ),
+        ],
+    ).json,
+    managed_policy_arns=[
+        s3_datasync_iam_policy.arn,
+    ],
+    name=f"datasync-role",
+    opts=pulumi.ResourceOptions(parent=s3_datasync_iam_policy),
+)
+
 pulumi.export("ipv6_cidr", network.vpc.ipv6_cidr_block)
 pulumi.export("vpc_id", network.vpc.id)
+pulumi.export("private_subnet_arns", [subnet.arn for subnet in network.private_subnets])
 pulumi.export("private_subnet_ids", [subnet.id for subnet in network.private_subnets])
 pulumi.export("public_subnet_ids", [subnet.id for subnet in network.public_subnets])
+pulumi.export("nomad_security_group_arn", security_group.arn)
 pulumi.export("nomad_security_group_id", security_group.id)
+pulumi.export("s3_datasync_arn", s3_datasync.arn)
+pulumi.export("s3_datasync_iam_arn", s3_datasync_iam.arn)

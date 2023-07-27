@@ -43,8 +43,12 @@ volume = pulumi_openttd.VolumeEfs(
     f"volume-cache",
     pulumi_openttd.VolumeEfsArgs(
         name=f"dorpsgek-{pulumi.get_stack()}",
+        subnet_arns=aws_core_stack.get_output("private_subnet_arns"),
         subnet_ids=aws_core_stack.get_output("private_subnet_ids"),
+        security_group_arn=aws_core_stack.get_output("nomad_security_group_arn"),
         security_group_id=aws_core_stack.get_output("nomad_security_group_id"),
+        s3_datasync_arn=aws_core_stack.get_output("s3_datasync_arn"),
+        s3_datasync_iam_arn=aws_core_stack.get_output("s3_datasync_iam_arn"),
     ),
 )
 

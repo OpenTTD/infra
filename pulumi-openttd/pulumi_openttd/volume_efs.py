@@ -8,8 +8,12 @@ from dataclasses import dataclass
 @dataclass
 class VolumeEfsArgs:
     name: str
+    subnet_arns: list[str]
     subnet_ids: list[str]
+    security_group_arn: str
     security_group_id: str
+    s3_datasync_arn: str
+    s3_datasync_iam_arn: str
 
 
 class VolumeEfs(pulumi.ComponentResource):
@@ -27,6 +31,44 @@ class VolumeEfs(pulumi.ComponentResource):
             },
         )
         args.subnet_ids.apply(lambda subnet_ids: self._mount_target(name, self.efs, subnet_ids, args.security_group_id))
+
+        s3_datasync_location = pulumi_aws.datasync.S3Location(
+            f"{name}-datasync-s3",
+            s3_bucket_arn=args.s3_datasync_arn,
+            subdirectory=f"/{args.name}",
+            s3_config=pulumi_aws.datasync.S3LocationS3ConfigArgs(
+                bucket_access_role_arn=args.s3_datasync_iam_arn,
+            ),
+            opts=pulumi.ResourceOptions(parent=self.efs),
+            tags={
+                "Name": f"{args.name}-s3",
+            },
+        )
+        datasync_location = pulumi_aws.datasync.EfsLocation(
+            f"{name}-datasync-efs",
+            ec2_config=pulumi_aws.datasync.EfsLocationEc2ConfigArgs(
+                security_group_arns=[args.security_group_arn],
+                subnet_arn=args.subnet_arns.apply(lambda subnet_arns: subnet_arns[0]),
+            ),
+            efs_file_system_arn=self.efs.arn,
+            opts=pulumi.ResourceOptions(parent=self.efs),
+            tags={
+                "Name": f"{args.name}-efs",
+            },
+        )
+        pulumi_aws.datasync.Task(
+            f"{name}-datasync-task",
+            destination_location_arn=s3_datasync_location.arn,
+            name=args.name,
+            schedule=pulumi_aws.datasync.TaskScheduleArgs(
+                schedule_expression="cron(0 3 * * ? *)",
+            ),
+            source_location_arn=datasync_location.arn,
+            opts=pulumi.ResourceOptions(parent=self.efs),
+            tags={
+                "Name": args.name,
+            },
+        )
 
         self.volume = pulumi_nomad.Volume(
             name,
