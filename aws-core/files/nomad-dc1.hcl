@@ -21,6 +21,7 @@ server {
 
 client {
   enabled = true
+  max_kill_timeout = "24h"
   servers = ["127.0.0.1"]
 }
 
