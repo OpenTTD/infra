@@ -97,8 +97,13 @@ systemctl enable nomad
 systemctl start nomad
 
 # Give nomad a moment to start up.
-sleep 5
-nomad node meta apply dibridge.ip_range=$(echo ${{PREFIX}} | sed 's@:0:0:0/80@:2000:0:0/84@')
+while true; do
+    nomad node meta apply dibridge.ip_range=$(echo ${{PREFIX}} | sed 's@:0:0:0/80@:2000:0:0/84@')
+    if [ $? -eq 0 ]; then
+        break
+    fi
+    sleep 1
+done
 
 # ASG endpoint is IPv4 only; so use aws CLI if we are public, and otherwise route it via our Nomad service (which runs on the public nodes).
 if [ -n "{'public' if args.is_public else ''}" ]; then
