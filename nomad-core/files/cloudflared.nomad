@@ -12,7 +12,7 @@ job "cloudflared" {
       driver = "docker"
 
       config {
-        image = "registry.ipv6.docker.com/cloudflare/cloudflared:2023.5.1"
+        image = "registry.ipv6.docker.com/cloudflare/cloudflared:2023.7.3"
         args = [
           "tunnel",
           "--no-autoupdate",
