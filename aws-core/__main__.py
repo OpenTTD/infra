@@ -11,6 +11,7 @@ config = pulumi.Config()
 pulumi_openttd.autotag.register()
 
 PUBLIC_PORTS = [
+    ("tcp", 113),   # ident, used by IRC
     ("tcp", 3973),  # turn-2
     ("tcp", 3974),  # turn-1
     ("tcp", 3975),  # stun
