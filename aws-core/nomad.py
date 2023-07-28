@@ -83,6 +83,9 @@ pip install \
     pproxy \
     # EOL
 
+sysctl -w net.ipv6.ip_nonlocal_bind=1
+echo "net.ipv6.ip_nonlocal_bind=1" >> /etc/sysctl.conf
+
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-{'public' if args.is_public else 'dc1'}.hcl -o /etc/nomad.d/nomad.hcl
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad.service -o /etc/systemd/system/nomad.service
 curl -sL https://raw.githubusercontent.com/OpenTTD/infra/main/aws-core/files/nomad-rc.local -o /etc/rc.d/rc.local
@@ -92,6 +95,10 @@ systemctl enable rc-local
 systemctl start rc-local
 systemctl enable nomad
 systemctl start nomad
+
+# Give nomad a moment to start up.
+sleep 5
+nomad node meta apply dibridge.ip_range=$(echo ${{PREFIX}} | sed 's@:0:0:0/80@:2000:0:0/84@')
 
 # ASG endpoint is IPv4 only; so use aws CLI if we are public, and otherwise route it via our Nomad service (which runs on the public nodes).
 if [ -n "{'public' if args.is_public else ''}" ]; then

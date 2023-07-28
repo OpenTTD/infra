@@ -6,9 +6,11 @@ MAC=$(curl -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest
 PREFIX=$(curl --fail -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${MAC}ipv6-prefix)
 
 DOCKER_PREFIX=$(echo ${PREFIX} | sed 's@:0:0:0/80@:1000:0:0/96@')
+DIBRIDGE_PREFIX=$(echo ${PREFIX} | sed 's@:0:0:0/80@:2000:0:0/84@')
 LOCAL_IP=$(echo ${PREFIX} | sed 's@:0:0:0/80@:0:0:1/128@')
 
 ip -6 addr add ${LOCAL_IP} dev ens5
+ip -6 addr add local ${DIBRIDGE_PREFIX} dev ens5
 
 # Configure the docker daemon to use this prefix.
 echo "{" > /etc/docker/daemon.json
