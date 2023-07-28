@@ -58,6 +58,7 @@ Now you should be able to execute `nomad node status` and get a valid response.
 - [bananas](./app/bananas): OpenTTD's BaNaNaS (CDN + server + api + web)
 - [binaries](./app/binaries): OpenTTD's old binaries domain
 - [cdn](./app/cdn): OpenTTD's CDN (for releases)
+- [dibridge](./app/dibridge): OpenTTD's IRC <-> Discord bridge
 - [docs](./app/docs): OpenTTD's docs
 - [dorpsgek](./app/dorpsgek): OpenTTD's DorpsGek (Discord / IRC bot to inform about GitHub activity)
 - [eints](./app/eints): OpenTTD's translator tool

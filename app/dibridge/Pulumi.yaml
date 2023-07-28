@@ -1,0 +1,6 @@
+name: app-dibridge
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - DiBridge

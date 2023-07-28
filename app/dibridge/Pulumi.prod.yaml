@@ -1,0 +1,11 @@
+config:
+  app-dibridge:discord-channel-id: "1008473233844097104"
+  app-dibridge:discord-token:
+    secure: AAABAC/TqFbq+g72InFBw2n2Svme3TK41WAkljj1pLhDdtwT2r6373y0okNiKy4poOG1mxwO7lWrsm3vTVEIboAznMRPBieXdHGmH7oNGmhoSOB+eeiM+cZDZFq4CnvEW0jpSNdi
+  app-dibridge:irc-channel: openttd
+  app-dibridge:irc-host: irc.oftc.net
+  app-dibridge:irc-nick: DorpsGek_vi
+  app-dibridge:memory: "96"
+  app-dibridge:memory-max: "128"
+  app-dibridge:sentry-environment: production
+  github:owner: OpenTTD
