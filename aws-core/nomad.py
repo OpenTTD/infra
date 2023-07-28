@@ -166,7 +166,7 @@ fi
                 pulumi_aws.ec2.LaunchTemplateBlockDeviceMappingArgs(
                     device_name="/dev/xvda",
                     ebs=pulumi_aws.ec2.LaunchTemplateBlockDeviceMappingEbsArgs(
-                        volume_size=10 if args.is_public else 30,
+                        volume_size=10,
                     ),
                 )
             ],
