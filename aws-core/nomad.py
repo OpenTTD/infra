@@ -59,7 +59,7 @@ INSTANCE=$(curl -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254
 # Set an IPv6 address so we can talk to the outside world.
 MAC=$(curl -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/)
 PREFIX=$(curl --fail -H "X-aws-ec2-metadata-token: ${{TOKEN}}" http://169.254.169.254/latest/meta-data/network/interfaces/macs/${{MAC}}ipv6-prefix)
-ip -6 addr add $(echo ${{PREFIX}} | sed 's@:0:0:0/80@:0:0:1/128@') dev ens5
+ip -6 addr add $(echo ${{PREFIX}} | sed 's@:0:0:0/80@:0:0:1/128@') metric 256 dev ens5
 
 # Give some time for the IPv6 to get online.
 ping -c 1 -W 1 google.com > /dev/null 2>&1
