@@ -63,6 +63,12 @@ global:
   scrape_interval:     5s
   evaluation_interval: 5s
 
+remote_write:
+- url: [[ grafana_cloud_url ]]
+  basic_auth:
+    username: [[ grafana_cloud_username ]]
+    password: [[ grafana_cloud_password ]]
+
 scrape_configs:
 - job_name: nomad_services
 

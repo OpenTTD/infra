@@ -145,6 +145,18 @@ proxy.Proxy(
     ),
 )
 
+proxy.Proxy(
+    "grafana-prometheus-proxy",
+    proxy.ProxyArgs(
+        account_id=global_stack.get_output("cloudflare_account_id"),
+        hostname=global_stack.get_output("domain").apply(lambda domain: f"grafana-prometheus-proxy.{domain}"),
+        proxy_to=global_stack.get_output("grafana_prometheus_hostname"),
+        type="transparent",
+        whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
+        zone_id=global_stack.get_output("cloudflare_zone_id"),
+    ),
+)
+
 t = tunnel.Tunnel(
     "aws-tunnel",
     tunnel.TunnelArgs(

@@ -1,7 +1,8 @@
 config:
-  global-config:cloudflare_account_id:
+  global-config:cloudflare-account-id:
     secure: AAABABHcVyMvpwM/y8dLc6KHlT+wpGRbmuq34PrMNrDAwfdktcSkBdo7iPKqNlac8G0CQCfSyz/FwogltWJMDw==
-  global-config:cloudflare_zone_id:
+  global-config:cloudflare-zone-id:
     secure: AAABAACktDPlZW6641+jnwpXWHn3Xi1LRy2JJ+EpQFu/4gp5RAzrEm7T5x0swX1Qu1OPlTJNdWbgI2L02u+1sw==
   global-config:domain: openttd.org
-  global-config:sentry_ingest_hostname: o220626.ingest.sentry.io
+  global-config:sentry-ingest-hostname: o220626.ingest.sentry.io
+  global-config:grafana-prometheus-hostname: prometheus-prod-24-prod-eu-west-2.grafana.net

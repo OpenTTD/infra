@@ -62,9 +62,20 @@ pulumi_nomad.Job(
     purge_on_destroy=True,
 )
 
+content = pulumi.Output.all(
+    grafana_cloud_password=config.require_secret("grafana-cloud-password"),
+    grafana_cloud_url=config.require_secret("grafana-cloud-url"),
+    grafana_cloud_username=config.require_secret("grafana-cloud-username"),
+).apply(
+    lambda kwargs: open("files/prometheus.nomad")
+    .read()
+    .replace("[[ grafana_cloud_password ]]", kwargs["grafana_cloud_password"])
+    .replace("[[ grafana_cloud_url ]]", kwargs["grafana_cloud_url"])
+    .replace("[[ grafana_cloud_username ]]", kwargs["grafana_cloud_username"])
+)
 pulumi_nomad.Job(
     "prometheus",
-    jobspec=open("files/prometheus.nomad").read(),
+    jobspec=content,
     hcl2=pulumi_nomad.JobHcl2Args(
         enabled=True,
     ),
