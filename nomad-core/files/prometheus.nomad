@@ -83,7 +83,7 @@ scrape_configs:
     target_label: job
 
   scrape_interval: 5s
-  metrics_path: /v1/metrics
+  metrics_path: /metrics
 
 - job_name: nomad
 

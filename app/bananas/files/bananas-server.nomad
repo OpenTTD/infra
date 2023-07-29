@@ -31,6 +31,7 @@ job "bananas-server-[[ stack ]]" {
         provider = "nomad"
 
         tags = [
+          "metrics",
           "port=[[ web_port ]]",
           "reloadable=bananas-server-[[ stack ]]",
         ]
@@ -93,7 +94,7 @@ job "bananas-server-[[ stack ]]" {
           "--storage-s3-endpoint-url", "[[ storage_s3_endpoint_url ]]",
           "--index", "github",
           "--index-github-url", "[[ index_github_url ]]",
-          "--cdn-fallback-url", "[[ cdn_fallback_url ]]",
+          "--cdn-url", "[[ cdn_fallback_url ]]",
           "--proxy-protocol",
           [[ bootstrap_command ]]
         ]
