@@ -60,7 +60,7 @@ job "prometheus" {
         data = <<EOT
 ---
 global:
-  scrape_interval:     5s
+  scrape_interval:     1m
   evaluation_interval: 5s
 
 remote_write:
@@ -82,7 +82,6 @@ scrape_configs:
   - source_labels: [__meta_nomad_service]
     target_label: job
 
-  scrape_interval: 5s
   metrics_path: /metrics
 
 - job_name: nomad
