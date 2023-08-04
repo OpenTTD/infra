@@ -26,6 +26,33 @@ job "game-coordinator-[[ stack ]]" {
       driver = "docker"
 
       service {
+        name = "coordinator-[[ stack ]]-web"
+        port = "http"
+        provider = "nomad"
+
+        tags = [
+          "metrics",
+        ]
+        canary_tags = [
+          "canary",
+        ]
+
+        check {
+          type = "http"
+          name = "app_health"
+          path = "/healthz"
+          interval = "20s"
+          timeout = "5s"
+
+          check_restart {
+            limit = 3
+            grace = "90s"
+            ignore_warnings = false
+          }
+        }
+      }
+
+      service {
         name = "coordinator-[[ stack ]]"
         port = "coordinator"
         provider = "nomad"
@@ -114,6 +141,33 @@ job "game-coordinator-[[ stack ]]" {
       driver = "docker"
 
       service {
+        name = "stun-[[ stack ]]-web"
+        port = "http"
+        provider = "nomad"
+
+        tags = [
+          "metrics",
+        ]
+        canary_tags = [
+          "canary",
+        ]
+
+        check {
+          type = "http"
+          name = "app_health"
+          path = "/healthz"
+          interval = "20s"
+          timeout = "5s"
+
+          check_restart {
+            limit = 3
+            grace = "90s"
+            ignore_warnings = false
+          }
+        }
+      }
+
+      service {
         name = "stun-[[ stack ]]"
         port = "stun"
         provider = "nomad"
@@ -198,6 +252,33 @@ job "game-coordinator-[[ stack ]]" {
       driver = "docker"
 
       service {
+        name = "turn-1-[[ stack ]]-web"
+        port = "http"
+        provider = "nomad"
+
+        tags = [
+          "metrics",
+        ]
+        canary_tags = [
+          "canary",
+        ]
+
+        check {
+          type = "http"
+          name = "app_health"
+          path = "/healthz"
+          interval = "20s"
+          timeout = "5s"
+
+          check_restart {
+            limit = 3
+            grace = "90s"
+            ignore_warnings = false
+          }
+        }
+      }
+
+      service {
         name = "turn-1-[[ stack ]]"
         port = "turn"
         provider = "nomad"
@@ -278,6 +359,33 @@ job "game-coordinator-[[ stack ]]" {
 
     task "app" {
       driver = "docker"
+
+      service {
+        name = "turn-2-[[ stack ]]-web"
+        port = "http"
+        provider = "nomad"
+
+        tags = [
+          "metrics",
+        ]
+        canary_tags = [
+          "canary",
+        ]
+
+        check {
+          type = "http"
+          name = "app_health"
+          path = "/healthz"
+          interval = "20s"
+          timeout = "5s"
+
+          check_restart {
+            limit = 3
+            grace = "90s"
+            ignore_warnings = false
+          }
+        }
+      }
 
       service {
         name = "turn-2-[[ stack ]]"
