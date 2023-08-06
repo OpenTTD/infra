@@ -61,7 +61,7 @@ class VolumeEfs(pulumi.ComponentResource):
             destination_location_arn=s3_datasync_location.arn,
             name=args.name,
             schedule=pulumi_aws.datasync.TaskScheduleArgs(
-                schedule_expression="cron(0 3 * * ? *)",
+                schedule_expression="cron(0 3 ? * SAT *)",
             ),
             source_location_arn=datasync_location.arn,
             opts=pulumi.ResourceOptions(parent=self.efs),
