@@ -32,8 +32,8 @@ class Server(pulumi.ComponentResource):
         super().__init__("app:bananas:server", name, None, opts)
 
         permission_groups = pulumi_cloudflare.get_api_token_permission_groups()
-        resources = args.cloudflare_account_id.apply(
-            lambda account_id: {f"com.cloudflare.api.account.{account_id}": "*"}
+        resources = pulumi.Output.all(account_id=args.cloudflare_account_id, s3_bucket=args.s3_bucket).apply(
+            lambda kwargs: {f"com.cloudflare.edge.r2.bucket.{kwargs['account_id']}_default_{kwargs['s3_bucket']}": "*"}
         )
 
         api_token = pulumi_cloudflare.ApiToken(
@@ -43,7 +43,7 @@ class Server(pulumi.ComponentResource):
                 pulumi_cloudflare.ApiTokenPolicyArgs(
                     resources=resources,
                     permission_groups=[
-                        permission_groups.account["Workers R2 Storage Read"],
+                        permission_groups.permissions["Workers R2 Storage Bucket Item Read"],
                     ],
                 ),
             ],

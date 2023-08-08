@@ -100,8 +100,8 @@ pulumi_cloudflare.WorkerDomain(
 
 if pulumi.get_stack() == "prod":
     permission_groups = pulumi_cloudflare.get_api_token_permission_groups()
-    resources = global_stack.get_output("cloudflare_account_id").apply(
-        lambda account_id: {f"com.cloudflare.api.account.{account_id}": "*"}
+    resources = pulumi.Output.all(account_id=global_stack.get_output("cloudflare_account_id"), s3_bucket=r2.name).apply(
+        lambda kwargs: {f"com.cloudflare.edge.r2.bucket.{kwargs['account_id']}_default_{kwargs['s3_bucket']}": "*"}
     )
 
     # Create Write token to give CDN generator in workflows repository full access to the bucket.
@@ -112,7 +112,7 @@ if pulumi.get_stack() == "prod":
             pulumi_cloudflare.ApiTokenPolicyArgs(
                 resources=resources,
                 permission_groups=[
-                    permission_groups.account["Workers R2 Storage Write"],
+                    permission_groups.permissions["Workers R2 Storage Bucket Item Write"],
                 ],
             ),
         ],

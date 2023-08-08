@@ -24,8 +24,8 @@ class LogPush(pulumi.ComponentResource):
         )
 
         permission_groups = pulumi_cloudflare.get_api_token_permission_groups()
-        resources = args.cloudflare_account_id.apply(
-            lambda account_id: {f"com.cloudflare.api.account.{account_id}": "*"}
+        resources = pulumi.Output.all(account_id=args.cloudflare_account_id, s3_bucket=r2.name).apply(
+            lambda kwargs: {f"com.cloudflare.edge.r2.bucket.{kwargs['account_id']}_default_{kwargs['s3_bucket']}": "*"}
         )
 
         r2_token = pulumi_cloudflare.ApiToken(
@@ -35,7 +35,7 @@ class LogPush(pulumi.ComponentResource):
                 pulumi_cloudflare.ApiTokenPolicyArgs(
                     resources=resources,
                     permission_groups=[
-                        permission_groups.account["Workers R2 Storage Write"],
+                        permission_groups.permissions["Workers R2 Storage Bucket Item Write"],
                     ],
                 ),
             ],
