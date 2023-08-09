@@ -77,7 +77,11 @@ export default {
     } else {
       /* Not in cache or didn't contain a last-modified; fetch from backend. */
       response = await fetch(strippedRequest);
-      response = responseWithCacheStatus(response, 'MISS');
+
+      if (response.headers.get('last-modified')) {
+        /* Mark as a cache miss if we are going to cache it. No matter what the internal cache said. */
+        response = responseWithCacheStatus(response, 'MISS');
+      }
     }
 
     /* Only cache if we have the last-modified header. */
