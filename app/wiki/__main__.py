@@ -63,15 +63,23 @@ service = pulumi_openttd.NomadService(
     ),
 )
 
-pulumi_cloudflare.PageRule(
-    "page-rule",
-    actions=pulumi_cloudflare.PageRuleActionsArgs(
-        cache_level="aggressive",
-    ),
-    target=pulumi.Output.format("{}.{}/*", config.require("hostname"), global_stack.get_output("domain")),
-    zone_id=global_stack.get_output("cloudflare_zone_id"),
-    opts=pulumi.ResourceOptions(ignore_changes=["priority"]),
+name = f"wiki-{pulumi.get_stack()}-cache"
+worker = pulumi_cloudflare.WorkerScript(
+    f"worker",
+    account_id=global_stack.get_output("cloudflare_account_id"),
+    content=open(f"files/cfw-wiki.js").read(),
+    logpush=True,
+    name=name,
+    module=True,
 )
+pulumi_cloudflare.WorkerRoute(
+    f"worker-route",
+    pattern=pulumi.Output.format("{}.{}/*", config.require("hostname"), global_stack.get_output("domain")),
+    script_name=name,
+    zone_id=global_stack.get_output("cloudflare_zone_id"),
+    opts=pulumi.ResourceOptions(parent=worker),
+)
+
 
 pulumi.export("reload_secret", reload_secret.result)
 pulumi.export("nomad_service_key", service.nomad_service_key.result)
