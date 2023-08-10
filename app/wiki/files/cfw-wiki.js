@@ -8,17 +8,16 @@ function responseWithCacheStatus(response, cache_status) {
   });
 }
 
-function responseCheckLastModified(response, request) {
-  /* If the request has an If-Modified-Since header, check if the response is
+function responseCheckEtag(response, request) {
+  /* If the request has an If-None-Match header, check if the response is
    * still fresh. */
-  const ifModifiedSince = request.headers.get('if-modified-since');
-  const lastModified = response.headers.get('last-modified');
+  const ifNoneMatch = request.headers.get('if-none-match');
+  const etag = response.headers.get('etag');
 
-  if (ifModifiedSince && lastModified) {
-    const ifModifiedSinceDate = new Date(ifModifiedSince);
-    const lastModifiedDate = new Date(lastModified);
+  console.log(ifNoneMatch, etag)
 
-    if (ifModifiedSinceDate >= lastModifiedDate) {
+  if (ifNoneMatch && etag) {
+    if (ifNoneMatch === etag) {
       return new Response(null, {
         status: 304,
         statusText: 'Not Modified',
@@ -48,8 +47,9 @@ export default {
 
     const url = new URL(request.url);
 
-    /* Ignore the if-modified-since header for cache evaluation. We run our own. */
+    /* Ignore the if-none-match / if-modified-since header for cache evaluation. We run our own. */
     const strippedRequest = new Request(url.toString(), request);
+    strippedRequest.headers.delete('if-none-match');
     strippedRequest.headers.delete('if-modified-since');
 
     /* Check if the file is in the cache. */
@@ -57,10 +57,10 @@ export default {
     const cache = caches.default;
     let response = await cache.match(cacheKey);
 
-    if (response && response.headers.get('last-modified')) {
+    if (response && response.headers.get('etag')) {
       /* Check with the backend if this resource is still fresh. */
       let backendRequest = strippedRequest.clone();
-      backendRequest.headers.set('If-Modified-Since', response.headers.get('last-modified'));
+      backendRequest.headers.set('If-None-Match', response.headers.get('etag'));
       const backendResponse = await fetch(backendRequest);
 
       if (backendResponse.status === 304) {
@@ -69,29 +69,31 @@ export default {
         /* Restore the original cache-control header. */
         response.headers.set('cache-control', response.headers.get('x-cache-control'));
         response.headers.delete('x-cache-control');
-        return responseCheckLastModified(response, request);
+        return responseCheckEtag(response, request);
       }
 
       /* Not fresh; update the cache with the new reply. */
       response = responseWithCacheStatus(backendResponse, 'EXPIRED');
     } else {
-      /* Not in cache or didn't contain a last-modified; fetch from backend. */
+      /* Not in cache or didn't contain a etag; fetch from backend. */
       response = await fetch(strippedRequest);
 
-      if (response.headers.get('last-modified')) {
+      if (response.headers.get('etag')) {
         /* Mark as a cache miss if we are going to cache it. No matter what the internal cache said. */
         response = responseWithCacheStatus(response, 'MISS');
       }
     }
 
-    /* Only cache if we have the last-modified header. */
-    if (response.headers.get('last-modified')) {
+    /* Only cache if we have the etag header. */
+    if (response.headers.get('etag')) {
       /* Cache files for a year on Cloudflare. The idea here is: as we revalidate
-      * every request anyway, we can cache the responses on Cloudflare for a long
-      * time. If Last-Modified indicates there hasn't been a change, we can
-      * return the cached response instead. */
+       * every request anyway, we can cache the responses on Cloudflare for a long
+       * time. If ETag indicates there hasn't been a change, we can return the
+       * cached response instead. */
       response.headers.set('x-cache-control', response.headers.get('cache-control'));
       response.headers.set('cache-control', 'public, max-age=31536000');
+      /* We remove the Last-Modified header, as it can be outdated. */
+      response.headers.delete("last-modified");
       context.waitUntil(cache.put(cacheKey, response.clone()));
 
       /* Restore the original cache-control header. */
@@ -99,6 +101,6 @@ export default {
       response.headers.delete('x-cache-control');
     }
 
-    return responseCheckLastModified(response, request);
+    return responseCheckEtag(response, request);
   }
 }
