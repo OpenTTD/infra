@@ -14,8 +14,6 @@ function responseCheckEtag(response, request) {
   const ifNoneMatch = request.headers.get('if-none-match');
   const etag = response.headers.get('etag');
 
-  console.log(ifNoneMatch, etag)
-
   if (ifNoneMatch && etag) {
     if (ifNoneMatch === etag) {
       return new Response(null, {
