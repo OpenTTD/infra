@@ -55,6 +55,8 @@ export default {
     const cache = caches.default;
     let response = await cache.match(cacheKey);
 
+    const objectName = url.pathname.replace(/^\//, '') + ".cache";
+
     if (response && response.headers.get('etag')) {
       /* Check with the backend if this resource is still fresh. */
       let backendRequest = strippedRequest.clone();
@@ -72,13 +74,59 @@ export default {
 
       /* Not fresh; update the cache with the new reply. */
       response = responseWithCacheStatus(backendResponse, 'EXPIRED');
+
+      /* Take a look in the bucket, to see if that object also expired. */
+      const object = await env.BUCKET_CACHE.get(objectName);
+      if (object === null || object.customMetadata.etag !== response.headers.get('etag')) {
+        /* The object in the bucket is outdated; update it. */
+        context.waitUntil(env.BUCKET_CACHE.put(objectName, response.clone().body, {
+          httpMetadata: response.headers,
+          customMetadata: {
+            'etag': response.headers.get('etag'),
+          },
+        }));
+      }
     } else {
-      /* Not in cache or didn't contain a etag; fetch from backend. */
+      /* Not in the cache; check the R2 bucket. */
+      const object = await env.BUCKET_CACHE.get(objectName);
+
+      if (object !== null) {
+        /* Check with the backend if this resource is still fresh. */
+        let backendRequest = strippedRequest.clone();
+        backendRequest.headers.set('If-None-Match', object.customMetadata.etag);
+        const backendResponse = await fetch(backendRequest);
+
+        if (backendResponse.status === 304) {
+          /* Still fresh, return the R2 object. */
+          const headers = new Headers();
+          object.writeHttpMetadata(headers);
+          headers.set('etag', object.customMetadata.etag);
+
+          response = new Response(object.body, {
+            headers,
+          });
+
+          /* We "use" the UPDATING status here, as Cloudflare can visualise that correctly
+           * in statistics. It strictly seen means something else, but it is good enough. */
+          response = responseWithCacheStatus(response, 'UPDATING');
+          return responseCheckEtag(response, request);
+        }
+      }
+
+      /* Not in cache / R2 (or didn't contain a etag); fetch from backend. */
       response = await fetch(strippedRequest);
 
       if (response.headers.get('etag')) {
         /* Mark as a cache miss if we are going to cache it. No matter what the internal cache said. */
         response = responseWithCacheStatus(response, 'MISS');
+
+        /* Store the entry also in the R2 bucket. */
+        context.waitUntil(env.BUCKET_CACHE.put(objectName, response.clone().body, {
+          httpMetadata: response.headers,
+          customMetadata: {
+            'etag': response.headers.get('etag'),
+          },
+        }));
       }
     }
 

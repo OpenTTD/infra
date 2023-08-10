@@ -63,6 +63,14 @@ service = pulumi_openttd.NomadService(
     ),
 )
 
+r2 = pulumi_cloudflare.R2Bucket(
+    "r2",
+    account_id=global_stack.get_output("cloudflare_account_id"),
+    location="WEUR",
+    name=f"wiki-cache-{pulumi.get_stack()}",
+    opts=pulumi.ResourceOptions(protect=True),
+)
+
 name = f"wiki-{pulumi.get_stack()}-cache"
 worker = pulumi_cloudflare.WorkerScript(
     f"worker",
@@ -71,6 +79,12 @@ worker = pulumi_cloudflare.WorkerScript(
     logpush=True,
     name=name,
     module=True,
+    r2_bucket_bindings=[
+        pulumi_cloudflare.WorkerScriptR2BucketBindingArgs(
+            name="BUCKET_CACHE",
+            bucket_name=r2.name,
+        )
+    ],
 )
 pulumi_cloudflare.WorkerRoute(
     f"worker-route",
