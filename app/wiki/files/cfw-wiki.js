@@ -8,7 +8,7 @@ function responseWithCacheStatus(response, cache_status) {
   });
 }
 
-function responseCheckEtag(response, request) {
+function responseCheckEtag(request, response) {
   /* If the request has an If-None-Match header, check if the response is
    * still fresh. */
   const ifNoneMatch = request.headers.get('if-none-match');
@@ -26,6 +26,10 @@ function responseCheckEtag(response, request) {
     }
   }
 
+  /* We don't support range requests for cached files. */
+  if (etag) {
+    response.headers.delete("accept-ranges");
+  }
   return response;
 }
 
@@ -61,7 +65,11 @@ export default {
       /* Check with the backend if this resource is still fresh. */
       let backendRequest = strippedRequest.clone();
       backendRequest.headers.set('If-None-Match', response.headers.get('etag'));
-      const backendResponse = await fetch(backendRequest);
+      const backendResponse = await fetch(backendRequest, {
+        cf: {
+          cacheTtl: 0,
+        }
+      });
 
       if (backendResponse.status === 304) {
         /* Still fresh, return the cached response. */
@@ -69,7 +77,7 @@ export default {
         /* Restore the original cache-control header. */
         response.headers.set('cache-control', response.headers.get('x-cache-control'));
         response.headers.delete('x-cache-control');
-        return responseCheckEtag(response, request);
+        return responseCheckEtag(request, response);
       }
 
       /* Not fresh; update the cache with the new reply. */
@@ -77,12 +85,12 @@ export default {
 
       /* Take a look in the bucket, to see if that object also expired. */
       const object = await env.BUCKET_CACHE.get(objectName);
-      if (object === null || object.customMetadata.etag !== response.headers.get('etag')) {
+      if (object === null || object.customMetadata.etag !== backendResponse.headers.get('etag')) {
         /* The object in the bucket is outdated; update it. */
-        context.waitUntil(env.BUCKET_CACHE.put(objectName, response.clone().body, {
-          httpMetadata: response.headers,
+        context.waitUntil(env.BUCKET_CACHE.put(objectName, backendResponse.clone().body, {
+          httpMetadata: backendResponse.headers,
           customMetadata: {
-            'etag': response.headers.get('etag'),
+            'etag': backendResponse.headers.get('etag'),
           },
         }));
       }
@@ -94,7 +102,11 @@ export default {
         /* Check with the backend if this resource is still fresh. */
         let backendRequest = strippedRequest.clone();
         backendRequest.headers.set('If-None-Match', object.customMetadata.etag);
-        const backendResponse = await fetch(backendRequest);
+        const backendResponse = await fetch(backendRequest, {
+          cf: {
+            cacheTtl: 0,
+          }
+        });
 
         if (backendResponse.status === 304) {
           /* Still fresh, return the R2 object. */
@@ -109,12 +121,14 @@ export default {
           /* We "use" the UPDATING status here, as Cloudflare can visualise that correctly
            * in statistics. It strictly seen means something else, but it is good enough. */
           response = responseWithCacheStatus(response, 'UPDATING');
-          return responseCheckEtag(response, request);
+          return responseCheckEtag(request, response);
         }
-      }
 
-      /* Not in cache / R2 (or didn't contain a etag); fetch from backend. */
-      response = await fetch(strippedRequest);
+        response = backendResponse;
+      } else {
+        /* Not in cache / R2 (or didn't contain a etag); fetch from backend. */
+        response = await fetch(strippedRequest);
+      }
 
       if (response.headers.get('etag')) {
         /* Mark as a cache miss if we are going to cache it. No matter what the internal cache said. */
@@ -147,6 +161,6 @@ export default {
       response.headers.delete('x-cache-control');
     }
 
-    return responseCheckEtag(response, request);
+    return responseCheckEtag(request, response);
   }
 }
