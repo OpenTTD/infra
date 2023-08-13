@@ -3,8 +3,8 @@ config:
   app-multiplayer:api-memory: "96"
   app-multiplayer:api-port: "11045"
   app-multiplayer:coordinator-hostname: coordinator
-  app-multiplayer:coordinator-memory-max: "128"
-  app-multiplayer:coordinator-memory: "64"
+  app-multiplayer:coordinator-memory-max: "196"
+  app-multiplayer:coordinator-memory: "128"
   app-multiplayer:coordinator-port: "11040"
   app-multiplayer:coordinator-public-port: "3976"
   app-multiplayer:master-hostname: master
