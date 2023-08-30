@@ -64,6 +64,7 @@ Now you should be able to execute `nomad node status` and get a valid response.
 - [eints](./app/eints): OpenTTD's translator tool
 - [preview](./app/preview): OpenTTD's previews
 - [redirect](./app/redirect): OpenTTD's redirect domains
+- [symbols](./app/symbols): OpenTTD's Symbol Server
 - [website](./app/website): OpenTTD's website
 - [wiki](./app/wiki): OpenTTD's wiki
 

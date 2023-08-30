@@ -1,0 +1,6 @@
+name: app-symbols
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - Symbol Server

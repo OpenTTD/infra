@@ -1,0 +1,5 @@
+config:
+  app-symbols:hostname: symbols
+  app-symbols:whitelist-projects:
+  - OpenTTD
+  github:owner: OpenTTD
