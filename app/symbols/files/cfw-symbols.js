@@ -95,7 +95,14 @@ export default {
       /* All symbol-requests that are not related to OpenTTD we forward to Mozilla. */
       if (objectName.endsWith('.sym')) {
         url.hostname = 'symbols.mozilla.org';
-        return fetch(url.toString(), request);
+
+        /* Fetch symbol from Mozilla, following their redirects. */
+        let response = await fetch(url.toString(), request);
+
+        /* Ensure CORS is allowed. */
+        response = new Response(response.body, response);
+        response.headers.set('access-control-allow-origin', '*');
+        return response;
       }
 
       return new Response('Not found', { status: 404 });
@@ -113,6 +120,7 @@ export default {
       const headers = new Headers();
       object.writeHttpMetadata(headers);
       headers.set('etag', object.httpEtag);
+      headers.set('access-control-allow-origin', '*');
       headers.set('content-type', 'text/plain');
 
       return new Response(null, {
@@ -144,6 +152,7 @@ export default {
       /* Cache symbol files for a year. */
       headers.set('cache-control', 'public, max-age=31536000, immutable');
       headers.set('etag', object.httpEtag);
+      headers.set('access-control-allow-origin', '*');
 
       /* We force a gzip encoding; that way we don't have to extract the gzip-stored file from the R2 bucket. */
       headers.set('content-type', 'text/plain');
@@ -166,6 +175,9 @@ export default {
         encodeBody: 'manual',
       });
       response.headers.set('content-encoding', 'gzip');
+
+      /* Ensure CORS is allowed. */
+      response.headers.set('access-control-allow-origin', '*');
     }
 
     return response;
