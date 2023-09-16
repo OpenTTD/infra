@@ -33,6 +33,9 @@ export default {
 
         return Response.redirect('https://github.com/OpenTTD/OpenTTD/issues', 301);
 
+      case 'community.[[ domain ]]':
+        return Response.redirect('https://wiki.[[ domain ]]/en/Community/Community', 301);
+
       case 'download.[[ domain ]]':
         return Response.redirect('https://www.[[ domain ]]/downloads/openttd-releases/latest.html', 301);
 

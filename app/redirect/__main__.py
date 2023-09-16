@@ -7,6 +7,7 @@ global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config
 
 HOSTNAMES = [
     "bugs",
+    "community",
     "download",
     "forum",
     "github",
