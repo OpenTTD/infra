@@ -97,7 +97,10 @@ export default {
         url.hostname = 'symbols.mozilla.org';
 
         /* Fetch symbol from Mozilla, following their redirects. */
-        let response = await fetch(url.toString(), request);
+        let response = await fetch(url.toString(), {
+          method: request.method,
+          headers: request.headers,
+        });
 
         /* Ensure CORS is allowed. */
         response = new Response(response.body, response);
