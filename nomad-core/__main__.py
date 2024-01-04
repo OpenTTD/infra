@@ -19,9 +19,6 @@ cloudflare_tunnel = pulumi_openttd.NomadVariable(
 pulumi_nomad.Job(
     "cloudflared",
     jobspec=open("files/cloudflared.nomad").read(),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
     opts=pulumi.ResourceOptions(depends_on=[cloudflare_tunnel]),
 )
@@ -29,36 +26,24 @@ pulumi_nomad.Job(
 pulumi_nomad.Job(
     "csi-efs",
     jobspec=open("files/csi-efs.nomad").read(),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
 )
 
 pulumi_nomad.Job(
     "nginx-dc1",
     jobspec=open("files/nginx-dc1.nomad").read(),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
 )
 
 pulumi_nomad.Job(
     "nginx-public",
     jobspec=open("files/nginx-public.nomad").read(),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
 )
 
 pulumi_nomad.Job(
     "pproxy",
     jobspec=open("files/pproxy.nomad").read(),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
 )
 
@@ -76,9 +61,6 @@ content = pulumi.Output.all(
 pulumi_nomad.Job(
     "prometheus",
     jobspec=content,
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
 )
 
@@ -86,9 +68,6 @@ pulumi_nomad.Job(
 pulumi_nomad.Job(
     "system",
     jobspec=open("files/system.nomad").read(),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
 )
 
@@ -120,9 +99,6 @@ content = pulumi.Output.all(
 pulumi_nomad.Job(
     "nlb-dns-update",
     jobspec=content.apply(lambda content: open("files/nlb-dns-update.nomad").read().replace("[[ content ]]", content)),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
 )
 
@@ -130,9 +106,6 @@ content = open("files/nomad-service.py").read()
 pulumi_nomad.Job(
     "nomad-service",
     jobspec=open("files/nomad-service.nomad").read().replace("[[ content ]]", content),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
 )
 
@@ -140,8 +113,5 @@ content = open("files/nomad-proxy.py").read()
 pulumi_nomad.Job(
     "nomad-proxy",
     jobspec=open("files/nomad-proxy.nomad").read().replace("[[ content ]]", content),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
 )

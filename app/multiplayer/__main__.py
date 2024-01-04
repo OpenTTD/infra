@@ -17,9 +17,6 @@ pulumi_openttd.autotag.register()
 pulumi_nomad.Job(
     "redis",
     jobspec=open("files/redis.nomad").read().replace("[[ stack ]]", pulumi.get_stack()),
-    hcl2=pulumi_nomad.JobHcl2Args(
-        enabled=True,
-    ),
     purge_on_destroy=True,
 )
 

@@ -64,9 +64,6 @@ class NomadService(pulumi.ComponentResource):
         pulumi_nomad.Job(
             f"{args.prefix}job",
             jobspec=pulumi_openttd.get_jobspec(jobspec.decode(), variables),
-            hcl2=pulumi_nomad.JobHcl2Args(
-                enabled=True,
-            ),
             purge_on_destroy=True,
             opts=pulumi.ResourceOptions(parent=self, depends_on=[*args.dependencies, *variables.values()]),
         )
