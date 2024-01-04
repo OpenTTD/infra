@@ -4,6 +4,8 @@ In this repository are several [Pulumi](pulumi.com/) projects that combined decl
 
 ## Prerequisite
 
+- Pulumi CLI installed
+- Nomad CLI installed
 - An AWS profile named `openttd` with valid credentials.
 - The following environment variables set:
   - `export CLOUDFLARE_API_TOKEN=` with a valid Cloudflare API token.
