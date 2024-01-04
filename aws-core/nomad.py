@@ -66,6 +66,7 @@ ping -c 1 -W 1 google.com > /dev/null 2>&1
 
 dnf install -y \
     cni-plugins \
+    dmidecode \
     docker \
     gzip \
     iproute \
