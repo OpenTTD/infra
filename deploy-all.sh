@@ -21,6 +21,8 @@ eints
 multiplayer
 preview
 redirect
+survey-web
+symbols
 website
 wiki
 wiki-data

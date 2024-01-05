@@ -1,0 +1,5 @@
+config:
+  app-survey-web:hostname: survey
+  app-survey-web:hostname-participate: survey-participate2
+  app-survey-web:name: openttd-survey-web
+  github:owner: OpenTTD

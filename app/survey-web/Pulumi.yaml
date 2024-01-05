@@ -1,0 +1,6 @@
+name: app-survey-web
+runtime:
+  name: python
+  options:
+    virtualenv: ../../.env
+description: App - Survey Website
