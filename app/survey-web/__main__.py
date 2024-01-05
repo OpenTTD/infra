@@ -101,7 +101,7 @@ pulumi_github.ActionsSecret(
     "github-secret-r2-secret-access-key",
     repository="survey-web",
     secret_name="R2_SURVEY_SECRET_ACCESS_KEY",
-    plaintext_value=api_token.value.apply(lambda secret: hashlib.sha256(secret.encode()).hexdigest()),
+    plaintext_value=r2_api_token.value.apply(lambda secret: hashlib.sha256(secret.encode()).hexdigest()),
     opts=pulumi.ResourceOptions(delete_before_replace=True),
 )
 pulumi_github.ActionsSecret(
