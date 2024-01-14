@@ -13,5 +13,8 @@ config:
     openttd-branches: OpenTTD
     openttd-nightlies: OpenTTD
     openttd-releases: OpenTTD
+    discord-social-releases: discord-social
+    steam-social-releases: steam-social
+    gog-galaxy-social-releases: gog-galaxy-social
   app-cdn:workflows-repository: workflows
   github:owner: OpenTTD
