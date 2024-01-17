@@ -111,6 +111,16 @@ export default {
       return new Response('Not found', { status: 404 });
     }
 
+    /* URLs are in the form of /<object>/<code_id>/<object_name>.sym.
+     * Force <code_id> to uppercase as Microsoft is making a mess of
+     * capitalization here, causing lookup failures. */
+    const parts = objectName.split('/');
+    if (parts.length !== 3) {
+      return new Response('Not found', { status: 404 });
+    }
+    parts[1] = parts[1].toUpperCase();
+    objectName = parts.join('/');
+
     /* All symbol-files are stored compressed on the R2 bucket. */
     objectName += ".gz";
 
