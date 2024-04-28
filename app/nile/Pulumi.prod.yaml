@@ -2,5 +2,5 @@ config:
   app-nile:hostname: nile
   app-nile:hostname-data: nile-data
   app-nile:name: openttd-nile
-  app-nile:name-data: openttd-nile-data
+  app-nile:name-data: nile-data
   github:owner: OpenTTD

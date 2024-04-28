@@ -2,5 +2,5 @@ config:
   app-nile:hostname: nile-preview
   app-nile:hostname-data: nile-data-preview
   app-nile:name: openttd-nile-preview
-  app-nile:name-data: openttd-nile-data-preview
+  app-nile:name-data: nile-data-preview
   github:owner: OpenTTD
