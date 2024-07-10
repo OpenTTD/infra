@@ -87,6 +87,7 @@ nomad.Nomad(
         security_groups=[security_group.id],
         subnets=network.private_subnets,
         vpc_id=network.vpc.id,
+        max_size=6,
     ),
 )
 nomad.Nomad(
@@ -98,6 +99,7 @@ nomad.Nomad(
         security_groups=[security_group.id, public_security_group.id],
         subnets=network.public_subnets,
         vpc_id=network.vpc.id,
+        max_size=4,
     ),
 )
 

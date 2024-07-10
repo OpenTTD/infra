@@ -15,6 +15,7 @@ class NomadArgs:
     security_groups: list[str]
     subnets: list[str]
     vpc_id: str
+    max_size: int
 
 
 class Nomad(pulumi.ComponentResource):
@@ -211,7 +212,7 @@ fi
                 id=launch_template.id,
                 version=launch_template.latest_version,
             ),
-            max_size=6,
+            max_size=args.max_size,
             min_size=1,
             name=f"{name}-asg",
             tags=[
