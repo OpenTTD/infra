@@ -1,3 +1,4 @@
 config:
   aws-core:console_password:
     secure: AAABAG7VYcGykYKoY2h7d0RE3qE34Fg8vVHK3rAINsmKMjAstxxGJY7j8N5SQySdhvHSC3XyREB2CEUAAT97DQ==
+  nomad:address: http://127.0.0.1:4848

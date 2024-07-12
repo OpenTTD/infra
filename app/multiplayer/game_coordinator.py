@@ -36,6 +36,7 @@ class GameCoordinator(pulumi.ComponentResource):
         super().__init__("app:multiplayer:gamecoordinator", name, None, opts)
 
         sentry_key = pulumi_openttd.get_sentry_key("game-coordinator", args.sentry_ingest_hostname, args.domain)
+        target = pulumi.get_stack().split("-")[1]
 
         SETTINGS = {
             "affinity_port": "6001" if pulumi.get_stack() == "preview" else "6002",
@@ -53,6 +54,7 @@ class GameCoordinator(pulumi.ComponentResource):
             "stun_memory": args.stun_memory,
             "stun_port": args.stun_port,
             "stun_public_port": args.stun_public_port,
+            "target": target,
             "turn_1_port": args.turn_1_port,
             "turn_1_public_port": args.turn_1_public_port,
             "turn_2_port": args.turn_2_port,
@@ -79,7 +81,7 @@ class GameCoordinator(pulumi.ComponentResource):
             name=pulumi.Output.format("{}.{}", args.coordinator_hostname, args.domain),
             proxied=False,
             type="CNAME",
-            value="nlb.openttd.org",
+            value=f"nlb-{target}.openttd.org",
             zone_id=args.cloudflare_zone_id,
             opts=pulumi.ResourceOptions(parent=self),
         )
@@ -88,7 +90,7 @@ class GameCoordinator(pulumi.ComponentResource):
             name=pulumi.Output.format("{}.{}", args.stun_hostname, args.domain),
             proxied=False,
             type="CNAME",
-            value="nlb.openttd.org",
+            value=f"nlb-{target}.openttd.org",
             zone_id=args.cloudflare_zone_id,
             opts=pulumi.ResourceOptions(parent=self),
         )
@@ -98,7 +100,7 @@ class GameCoordinator(pulumi.ComponentResource):
                 name=pulumi.Output.format("{}-{}.{}", args.turn_hostname, i + 1, args.domain),
                 proxied=False,
                 type="CNAME",
-                value="nlb.openttd.org",
+                value=f"nlb-{target}.openttd.org",
                 zone_id=args.cloudflare_zone_id,
                 opts=pulumi.ResourceOptions(parent=self),
             )

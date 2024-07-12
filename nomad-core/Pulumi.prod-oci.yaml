@@ -1,0 +1,6 @@
+config:
+  nomad-core:grafana-cloud-password:
+    secure: AAABALvd/OhyW+upUo/H8g9xPyBHiPksq8qUL6nPPUJ9Z7/0347b0AuQEOxOBtY2PU9reK8kvYikWc98WVb0YNuVaO1+DLA+IVPUn1Z+6SbyLAsCJ7PWV6w6itVmptlJuyE4TsQWqn4e9IwDs0OJf2/DyDHoS472lDuo9JrTtQggDDCj2h6i1oaZFw7gFNyDSgULiVFtYrgHnKPIIUNjuJqsoBxDFGF+22h3gJedXk8=
+  nomad-core:grafana-cloud-url: https://grafana-prometheus-proxy.openttd.org/api/prom/push
+  nomad-core:grafana-cloud-username: "1118402"
+  nomad:address: http://127.0.0.1:4747

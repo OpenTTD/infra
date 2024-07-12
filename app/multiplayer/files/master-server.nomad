@@ -63,7 +63,7 @@ job "master-server-[[ stack ]]" {
           "--bind", "0.0.0.0",
           "--db", "redis",
           "--proxy-protocol",
-          "--socks-proxy", "socks5://nlb-internal.[[ domain ]]:8080",
+          "--socks-proxy", "socks5://nlb-[[ target ]]-internal.[[ domain ]]:8080",
         ]
         network_mode = "bridge"
         advertise_ipv6_address = true

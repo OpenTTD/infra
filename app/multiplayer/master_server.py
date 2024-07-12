@@ -26,6 +26,7 @@ class MasterServer(pulumi.ComponentResource):
         super().__init__("app:multiplayer:masterserver", name, None, opts)
 
         sentry_key = pulumi_openttd.get_sentry_key("master-server", args.sentry_ingest_hostname, args.domain)
+        target = pulumi.get_stack().split("-")[1]
 
         SETTINGS = {
             "api_memory_max": args.api_memory_max,
@@ -40,6 +41,7 @@ class MasterServer(pulumi.ComponentResource):
             "sentry_dsn": sentry_key,
             "sentry_environment": args.sentry_environment,
             "stack": pulumi.get_stack(),
+            "target": target,
         }
 
         pulumi_openttd.NomadService(
@@ -59,7 +61,7 @@ class MasterServer(pulumi.ComponentResource):
             name=pulumi.Output.format("{}.{}", args.master_hostname, args.domain),
             proxied=False,
             type="CNAME",
-            value="nlb.openttd.org",
+            value=f"nlb-{target}.openttd.org",
             zone_id=args.cloudflare_zone_id,
             opts=pulumi.ResourceOptions(parent=self),
         )

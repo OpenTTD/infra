@@ -94,12 +94,14 @@ class Server(pulumi.ComponentResource):
             opts=pulumi.ResourceOptions(parent=self),
         )
 
+        target = pulumi.get_stack().split("-")[1]
+
         pulumi_cloudflare.Record(
             f"server-dns",
             name=pulumi.Output.format("{}.{}", args.content_hostname, args.domain),
             proxied=False,
             type="CNAME",
-            value="nlb.openttd.org",
+            value=f"nlb-{target}.openttd.org",
             zone_id=args.cloudflare_zone_id,
             opts=pulumi.ResourceOptions(parent=self),
         )

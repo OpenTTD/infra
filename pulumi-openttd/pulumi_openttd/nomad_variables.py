@@ -17,19 +17,27 @@ class NomadVariableArgs:
     overwrite_if_exists: bool = True
 
 
-def local_run(command, stdin=None, check=True):
+def local_run(nomad_address, command, stdin=None, check=True):
     return subprocess.run(
         shlex.split(command),
         input=stdin.encode() if stdin else None,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=check,
+        env={
+            "NOMAD_ADDR": nomad_address,
+        },
     ).stdout
 
 
 class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
-    def _get_current_vars(self, path):
-        vars = local_run(f"nomad var get -out json {path}", check=False)
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.nomad_address = pulumi.Config("nomad").require("address")
+
+    def _get_current_vars(self, nomad_address, path):
+        vars = local_run(nomad_address, f"nomad var get -out json {path}", check=False)
 
         if vars:
             return json.loads(vars)
@@ -42,7 +50,14 @@ class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
             }
 
     def read(self, id, args):
-        current_vars = self._get_current_vars(args["path"])
+        # Older versions of this provider did not have the nomad_address stored.
+        # As such, it was always the default address.
+        if not hasattr(self, "nomad_address"):
+            nomad_address = "http://localhost:4646"
+        else:
+            nomad_address = self.nomad_address
+
+        current_vars = self._get_current_vars(nomad_address, args["path"])
 
         if args["name"] not in current_vars["Items"]:
             args["value"] = ""
@@ -52,27 +67,30 @@ class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
         return pulumi.dynamic.ReadResult(id, args)
 
     def create(self, args):
-        current_vars = self._get_current_vars(args["path"])
+        current_vars = self._get_current_vars(self.nomad_address, args["path"])
 
         if args["overwrite_if_exists"] or args["name"] not in current_vars["Items"]:
             current_vars["Items"][args["name"]] = args["value"]
 
-        local_run("nomad var put -in json -", stdin=json.dumps(current_vars))
+        local_run(self.nomad_address, "nomad var put -in json -", stdin=json.dumps(current_vars))
 
         return pulumi.dynamic.CreateResult(f"variable-{args['path']}-{args['name']}", args)
 
     def update(self, id, old_args, args):
-        current_vars = self._get_current_vars(args["path"])
+        current_vars = self._get_current_vars(self.nomad_address, args["path"])
 
         if args["overwrite_if_exists"] or args["name"] not in current_vars["Items"]:
             current_vars["Items"][args["name"]] = args["value"]
 
-        local_run("nomad var put -in json -", stdin=json.dumps(current_vars))
+        # Only actually update when there was an actual change. Otherwise it is most likely
+        # just Pulumi doing internal updates.
+        if old_args["value"] != args["value"]:
+            local_run(self.nomad_address, "nomad var put -in json -", stdin=json.dumps(current_vars))
 
         return pulumi.dynamic.UpdateResult(args)
 
     def delete(self, id, args):
-        current_vars = self._get_current_vars(args["path"])
+        current_vars = self._get_current_vars(self.nomad_address, args["path"])
 
         # Happens when Pulumi and the actual source is out-of-sync; ignore it silently, as clearly the entry is gone.
         if not current_vars["Items"]:
@@ -82,9 +100,19 @@ class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
             del current_vars["Items"][args["name"]]
 
         if current_vars["Items"]:
-            local_run("nomad var put -in json -", stdin=json.dumps(current_vars))
+            local_run(self.nomad_address, "nomad var put -in json -", stdin=json.dumps(current_vars))
         else:
-            local_run(f"nomad var purge -check-index {current_vars['ModifyIndex']} {args['path']}")
+            local_run(self.nomad_address, f"nomad var purge -check-index {current_vars['ModifyIndex']} {args['path']}")
+
+    def check(self, old_args, args):
+        # In case we are not overwriting the existing value, make sure we patch
+        # up Pulumi with the current value (if that exists).
+        if not args["overwrite_if_exists"]:
+            current_vars = self._get_current_vars(self.nomad_address, args["path"])
+            if args["name"] in current_vars["Items"]:
+                args["value"] = current_vars["Items"][args["name"]]
+
+        return pulumi.dynamic.CheckResult(args, [])
 
     def diff(self, id, old_args, args):
         changes = False
@@ -96,6 +124,10 @@ class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
         # Don't attempt to update change of name/path cleanly, and just delete and recreate.
         if old_args["name"] != args["name"] or old_args["path"] != args["path"]:
             replaces.append("name")
+            changes = True
+
+        # Make sure we update variables if any of our class members change.
+        if old_args["__provider"] != args["__provider"]:
             changes = True
 
         return pulumi.dynamic.DiffResult(changes=changes, replaces=replaces, delete_before_replace=True)

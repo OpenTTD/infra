@@ -11,7 +11,6 @@ In this repository are several [Pulumi](https://pulumi.com/) projects that combi
   - `export CLOUDFLARE_API_TOKEN=` with a valid Cloudflare API token.
   - `export GITHUB_TOKEN=` with a valid GitHub API token.
   - `export SENTRY_TOKEN=` with a valid Sentry API token.
-  - `export NOMAD_ADDR=http://127.0.0.1:4646`
   - `export AWS_PROFILE=openttd`
   - `export AWS_REGION=eu-west-1`
 
@@ -24,11 +23,12 @@ python3 -m venv .env
 .env/bin/pip install -r requirements.txt
 ( cd pulumi-openttd && pip install -e . )
 
-( cd global-config && ../.env/bin/pulumi up )
-( cd aws-core && ../.env/bin/pulumi up )
-( cd cloudflare-core && ../.env/bin/pulumi up )
+( cd global-config && ../.env/bin/pulumi up -s OpenTTD/prod )
+( cd aws-core && ../.env/bin/pulumi up -s OpenTTD/prod )
+( cd cloudflare-core && ../.env/bin/pulumi up -s OpenTTD/prod )
 # Read "Bootstrapping" chapter if this is the first time.
-( cd nomad-core && ../.env/bin/pulumi up )
+( cd nomad-core && ../.env/bin/pulumi up -s OpenTTD/prod-aws )
+( cd nomad-core && ../.env/bin/pulumi up -s OpenTTD/prod-oci )
 
 cd app
 # Deploy all applications in this folder similar to above.

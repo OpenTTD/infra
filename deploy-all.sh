@@ -8,7 +8,8 @@ cd $(dirname $0)
 ( cd aws-core && pulumi up -r -s OpenTTD/prod )
 # Refreshing cloudflare seems not possible.
 ( cd cloudflare-core && pulumi up -s OpenTTD/prod )
-( cd nomad-core && pulumi up -r -s OpenTTD/prod )
+( cd nomad-core && pulumi up -r -s OpenTTD/prod-aws )
+( cd nomad-core && pulumi up -r -s OpenTTD/prod-oci )
 
 APP_LIST="
 bananas

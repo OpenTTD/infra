@@ -5,7 +5,7 @@ Nomad proxy to make sure the Content-Type is set correctly for streaming endpoin
 This is needed, as otherwise cloudflared buffers those calls, which is kinda
 defeating the purpose of streaming endpoints.
 
-This proxy listens on 8646, and forwards all requests to 127.0.0.1:4646.
+This proxy listens on 8686, and forwards all requests to 127.0.0.1:4646.
 """
 
 import aiohttp

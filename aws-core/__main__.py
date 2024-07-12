@@ -164,7 +164,6 @@ s3_datasync_iam = pulumi_aws.iam.Role(
 )
 
 pulumi.export("ipv6_cidr", network.vpc.ipv6_cidr_block)
-pulumi.export("vpc_id", network.vpc.id)
 pulumi.export("private_subnet_arns", [subnet.arn for subnet in network.private_subnets])
 pulumi.export("private_subnet_ids", [subnet.id for subnet in network.private_subnets])
 pulumi.export("public_subnet_ids", [subnet.id for subnet in network.public_subnets])

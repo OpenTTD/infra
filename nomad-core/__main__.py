@@ -7,12 +7,14 @@ config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 cloudflare_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/cloudflare-core/prod")
 
+target = pulumi.get_stack().split("-")[1]
+
 cloudflare_tunnel = pulumi_openttd.NomadVariable(
     "variable-cloudflare-tunnel",
     pulumi_openttd.NomadVariableArgs(
         path="nomad/jobs/cloudflared",
         name="tunnel_token",
-        value=cloudflare_core_stack.get_output("tunnel_token"),
+        value=cloudflare_core_stack.get_output(f"{target}_tunnel_token"),
         overwrite_if_exists=True,
     ),
 )
@@ -23,11 +25,12 @@ pulumi_nomad.Job(
     opts=pulumi.ResourceOptions(depends_on=[cloudflare_tunnel]),
 )
 
-pulumi_nomad.Job(
-    "csi-efs",
-    jobspec=open("files/csi-efs.nomad").read(),
-    purge_on_destroy=True,
-)
+if target == "aws":
+    pulumi_nomad.Job(
+        "csi-efs",
+        jobspec=open("files/csi-efs.nomad").read(),
+        purge_on_destroy=True,
+    )
 
 pulumi_nomad.Job(
     "nginx-dc1",
@@ -76,8 +79,8 @@ resources = global_stack.get_output("cloudflare_zone_id").apply(
     lambda zone_id: {f"com.cloudflare.api.account.zone.{zone_id}": "*"}
 )
 nomad_service_api_token = pulumi_cloudflare.ApiToken(
-    "nomad-service-api-token",
-    name="nomad-core/service",
+    f"nomad-service-{target}-api-token",
+    name=f"nomad-core/service-{target}",
     policies=[
         pulumi_cloudflare.ApiTokenPolicyArgs(
             resources=resources,
@@ -91,10 +94,11 @@ nomad_service_api_token = pulumi_cloudflare.ApiToken(
 content = pulumi.Output.all(
     api_token=nomad_service_api_token.value, zone_id=global_stack.get_output("cloudflare_zone_id")
 ).apply(
-    lambda kwargs: open("files/nlb-dns-update.py")
+    lambda kwargs: open(f"files/nlb-dns-update.py")
     .read()
     .replace("[[ cloudflare_zone_id ]]", kwargs["zone_id"])
     .replace("[[ cloudflare_api_token ]]", kwargs["api_token"])
+    .replace("[[ target ]]", target)
 )
 pulumi_nomad.Job(
     "nlb-dns-update",
