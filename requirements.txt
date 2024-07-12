@@ -15,6 +15,7 @@ pulumi_aws==6.44.0
 pulumi_cloudflare==5.33.1
 pulumi_github==6.2.2
 pulumi_nomad==2.3.0
+pulumi-oci==2.1.0
 pulumi_random==4.16.3
 pulumi_tls==5.0.4
 pulumiverse-sentry==0.0.8

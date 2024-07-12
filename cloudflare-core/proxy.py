@@ -2,17 +2,19 @@ import pulumi
 import pulumi_cloudflare
 
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
 class ProxyAccessPolicyArgs:
     account_id: str
     whitelist_ipv6_cidr: str
+    whitelist_ipv4: Optional[str] = None
 
 
 @dataclass
 class ProxyArgs:
-    access_policy: pulumi_cloudflare.AccessPolicy
+    access_policies: list[int]
     account_id: str
     hostname: str
     type: str  # Either "registry" or "transparent".
@@ -33,9 +35,10 @@ class ProxyAccessPolicy(pulumi.ComponentResource):
                     ips=[
                         args.whitelist_ipv6_cidr,
                     ]
+                    + ([args.whitelist_ipv4] if args.whitelist_ipv4 else []),
                 ),
             ],
-            name="IPv6 Whitelist",
+            name=f"IPv6 Whitelist ({name})",
             opts=pulumi.ResourceOptions(parent=self),
         )
 
@@ -83,7 +86,7 @@ class Proxy(pulumi.ComponentResource):
             app_launcher_visible=False,
             domain=args.hostname,
             name=name,
-            policies=[args.access_policy.id],
+            policies=args.access_policies,
             type="self_hosted",
             opts=pulumi.ResourceOptions(parent=self),
         )

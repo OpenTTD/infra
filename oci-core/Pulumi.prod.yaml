@@ -1,0 +1,5 @@
+config:
+  oci-core:compartment-id: ocid1.compartment.oc1..aaaaaaaajkj6ua2gkoltkpu5l4wbdu7a72gd6u2kewtb65qjcwwqlgvkraiq
+  oci-core:console_password:
+    secure: AAABAPDiTHmOoQPS7BandseYv6HVrwSs4octq9dUGRlmrX629LU+fPPK+K96AtWo+G7zI5ciOgsIY5zsWNm2Bg==
+  nomad:address: http://127.0.0.1:4747

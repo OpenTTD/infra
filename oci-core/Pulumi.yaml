@@ -1,0 +1,6 @@
+name: oci-core
+runtime:
+  name: python
+  options:
+    virtualenv: ../.env
+description: OCI Core Infrastructure

@@ -1,0 +1,28 @@
+#!/bin/sh
+
+CIDR_BLOCK=$(oci-metadata --get "vnics/*/ipv6SubnetCidrBlock" --json | jq -r '.vnics[1].ipv6SubnetCidrBlock' | sed 's/0000:0000:0000:0000/:/')
+NODE_NUMBER=$(hostname | rev | cut -d- -f1 | rev | xargs -n 1 printf "%x")
+PREFIX=$(echo ${CIDR_BLOCK} | sed "s@:/64@${NODE_NUMBER}:0:0:0/80@")
+
+DOCKER_PREFIX=$(echo ${PREFIX} | sed 's@:0:0:0/80@:1000:0:0/96@')
+DIBRIDGE_PREFIX=$(echo ${PREFIX} | sed 's@:0:0:0/80@:2000:0:0/84@')
+LOCAL_IP=$(echo ${PREFIX} | sed 's@:0:0:0/80@:0:0:1/128@')
+
+# Disable NIC 1, as all IPv6 traffic will arrive on NIC 0.
+ip link set enp1s0 down
+
+ip -6 addr add ${LOCAL_IP} metric 256 dev enp0s6
+
+# Route dibridge prefix; dibridge uses non-local binding addresses.
+ip -6 route add local ${DIBRIDGE_PREFIX} metric 384 dev enp0s6
+ip -6 addr add local ${DIBRIDGE_PREFIX} metric 384 dev enp0s6
+
+ip6tables -P FORWARD ACCEPT
+
+# Configure the docker daemon to use this prefix.
+echo "{" > /etc/docker/daemon.json
+echo "  \"ipv6\": true," >> /etc/docker/daemon.json
+echo "  \"fixed-cidr-v6\": \"${DOCKER_PREFIX}\"" >> /etc/docker/daemon.json
+echo "}" >> /etc/docker/daemon.json
+
+systemctl start docker

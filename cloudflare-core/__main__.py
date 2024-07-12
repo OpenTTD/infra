@@ -10,6 +10,7 @@ import tunnel
 config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 aws_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/prod")
+oci_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/oci-core/prod")
 
 
 @dataclass
@@ -90,18 +91,27 @@ pulumi_cloudflare.Ruleset(
     ],
 )
 
-access_policy = proxy.ProxyAccessPolicy(
-    "access-policy",
+access_policy_aws = proxy.ProxyAccessPolicy(
+    "access-policy-aws",
     proxy.ProxyAccessPolicyArgs(
         account_id=global_stack.get_output("cloudflare_account_id"),
         whitelist_ipv6_cidr=aws_core_stack.get_output("ipv6_cidr"),
     ),
 )
+access_policy_oci = proxy.ProxyAccessPolicy(
+    "access-policy-oci",
+    proxy.ProxyAccessPolicyArgs(
+        account_id=global_stack.get_output("cloudflare_account_id"),
+        whitelist_ipv6_cidr=oci_core_stack.get_output("ipv6_cidr"),
+        whitelist_ipv4=oci_core_stack.get_output("ipv4_gateway").apply(lambda gateway: f"{gateway}/32"),
+    ),
+)
+access_policies = [access_policy_aws.access_policy.id, access_policy_oci.access_policy.id]
 
 proxy.Proxy(
     "ghcr-proxy",
     proxy.ProxyArgs(
-        access_policy=access_policy.access_policy,
+        access_policies=access_policies,
         account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"ghcr-proxy.{domain}"),
         proxy_to=pulumi.Output.from_input("ghcr.io"),
@@ -113,7 +123,7 @@ proxy.Proxy(
 proxy.Proxy(
     "github-proxy",
     proxy.ProxyArgs(
-        access_policy=access_policy.access_policy,
+        access_policies=access_policies,
         account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"github-proxy.{domain}"),
         proxy_to=pulumi.Output.from_input("github.com"),
@@ -125,7 +135,7 @@ proxy.Proxy(
 proxy.Proxy(
     "github-api-proxy",
     proxy.ProxyArgs(
-        access_policy=access_policy.access_policy,
+        access_policies=access_policies,
         account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"github-api-proxy.{domain}"),
         proxy_to=pulumi.Output.from_input("api.github.com"),
@@ -137,7 +147,7 @@ proxy.Proxy(
 proxy.Proxy(
     "discord-proxy",
     proxy.ProxyArgs(
-        access_policy=access_policy.access_policy,
+        access_policies=access_policies,
         account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"discord-proxy.{domain}"),
         proxy_to=pulumi.Output.from_input("discord.com"),
@@ -149,7 +159,7 @@ proxy.Proxy(
 proxy.Proxy(
     "sentry-ingest-proxy",
     proxy.ProxyArgs(
-        access_policy=access_policy.access_policy,
+        access_policies=access_policies,
         account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"sentry-ingest.{domain}"),
         proxy_to=global_stack.get_output("sentry_ingest_hostname"),
@@ -161,7 +171,7 @@ proxy.Proxy(
 proxy.Proxy(
     "grafana-prometheus-proxy",
     proxy.ProxyArgs(
-        access_policy=access_policy.access_policy,
+        access_policies=access_policies,
         account_id=global_stack.get_output("cloudflare_account_id"),
         hostname=global_stack.get_output("domain").apply(lambda domain: f"grafana-prometheus-proxy.{domain}"),
         proxy_to=global_stack.get_output("grafana_prometheus_hostname"),

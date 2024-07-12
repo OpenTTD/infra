@@ -4,6 +4,7 @@ pulumi-aws
 pulumi-cloudflare
 pulumi-github
 pulumi-nomad
+pulumi-oci
 pulumi-random
 pulumi-tls
 pulumiverse_sentry
