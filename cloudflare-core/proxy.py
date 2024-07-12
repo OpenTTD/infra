@@ -5,13 +5,41 @@ from dataclasses import dataclass
 
 
 @dataclass
+class ProxyAccessPolicyArgs:
+    account_id: str
+    whitelist_ipv6_cidr: str
+
+
+@dataclass
 class ProxyArgs:
+    access_policy: pulumi_cloudflare.AccessPolicy
     account_id: str
     hostname: str
     type: str  # Either "registry" or "transparent".
     proxy_to: str
-    whitelist_ipv6_cidr: str
     zone_id: str
+
+
+class ProxyAccessPolicy(pulumi.ComponentResource):
+    def __init__(self, name, args: ProxyAccessPolicyArgs, opts: pulumi.ResourceOptions = None):
+        super().__init__("openttd:cfw:ProxyAccessPolicy", name, None, opts)
+
+        self.access_policy = pulumi_cloudflare.AccessPolicy(
+            f"{name}-app-policy",
+            account_id=args.account_id,
+            decision="bypass",
+            includes=[
+                pulumi_cloudflare.AccessPolicyIncludeArgs(
+                    ips=[
+                        args.whitelist_ipv6_cidr,
+                    ]
+                ),
+            ],
+            name="IPv6 Whitelist",
+            opts=pulumi.ResourceOptions(parent=self),
+        )
+
+        self.register_outputs({})
 
 
 class Proxy(pulumi.ComponentResource):
@@ -49,31 +77,15 @@ class Proxy(pulumi.ComponentResource):
             opts=pulumi.ResourceOptions(parent=worker),
         )
 
-        application = pulumi_cloudflare.AccessApplication(
+        pulumi_cloudflare.AccessApplication(
             f"{name}-app",
             account_id=args.account_id,
             app_launcher_visible=False,
             domain=args.hostname,
             name=name,
+            policies=[args.access_policy.id],
             type="self_hosted",
             opts=pulumi.ResourceOptions(parent=self),
-        )
-
-        pulumi_cloudflare.AccessPolicy(
-            f"{name}-app-policy",
-            account_id=args.account_id,
-            application_id=application.id,
-            decision="bypass",
-            includes=[
-                pulumi_cloudflare.AccessPolicyIncludeArgs(
-                    ips=[
-                        args.whitelist_ipv6_cidr,
-                    ]
-                ),
-            ],
-            name="IPv6 Whitelist",
-            precedence=1,
-            opts=pulumi.ResourceOptions(parent=application),
         )
 
         self.register_outputs({})
