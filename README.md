@@ -41,7 +41,7 @@ cd cloudflare-core
 export CF_ACCESS_CLIENT_ID=$(../.env/bin/pulumi stack output service_token_id --show-secrets)
 export CF_ACCESS_CLIENT_SECRET=$(../.env/bin/pulumi stack output service_token_secret --show-secrets)
 cd ..
-.env/bin/python nomad-proxy nomad.openttd.org
+.env/bin/python nomad-proxy nomad-aws.openttd.org 4646
 ```
 
 Now you should be able to execute `nomad node status` and get a valid response.

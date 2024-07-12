@@ -50,8 +50,8 @@ async def proxy(request):
 def main():
     global NOMAD_HOST
 
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <nomad-host>")
+    if len(sys.argv) != 3:
+        print(f"Usage: {sys.argv[0]} <nomad-host> <nomad-port>")
         sys.exit(1)
 
     if not os.getenv("CF_ACCESS_CLIENT_ID") or not os.getenv("CF_ACCESS_CLIENT_SECRET"):
@@ -62,7 +62,7 @@ def main():
 
     app = web.Application()
     app.add_routes(routes)
-    web.run_app(app, port=4646)
+    web.run_app(app, port=int(sys.argv[2]))
 
 
 if __name__ == "__main__":
