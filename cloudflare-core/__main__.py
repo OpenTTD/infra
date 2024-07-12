@@ -20,10 +20,10 @@ class RouteMappingArgs:
 
 
 # Port -> (Public, Subdomain, Path)
-ROUTE_MAPPING = {
-    "8686": RouteMappingArgs(subdomain="nomad", protected=True),
+ROUTE_MAPPING_AWS = {
+    "8686": RouteMappingArgs(subdomain="nomad-aws", protected=True),
     "10000": RouteMappingArgs(subdomain="nomad-service"),
-    "10010": RouteMappingArgs(subdomain="nomad-prom", protected=True),
+    "10010": RouteMappingArgs(subdomain="nomad-aws-prom", protected=True),
     "11000": RouteMappingArgs(subdomain="wiki"),
     "11010": RouteMappingArgs(subdomain="bananas-server"),
     "11012": RouteMappingArgs(subdomain="bananas-api", path="/new-package/tus/*"),
@@ -42,6 +42,11 @@ ROUTE_MAPPING = {
     "12030": RouteMappingArgs(subdomain="translator-preview"),
     "12045": RouteMappingArgs(subdomain="servers-preview-api"),
     "12046": RouteMappingArgs(subdomain="servers-preview"),
+}
+ROUTE_MAPPING_OCI = {
+    "8686": RouteMappingArgs(subdomain="nomad-oci", protected=True),
+    # "10000": RouteMappingArgs(subdomain="nomad-oci-service"),
+    "10010": RouteMappingArgs(subdomain="nomad-oci-prom", protected=True),
 }
 
 # Subdomains where HTTP is allowed.
@@ -165,9 +170,9 @@ proxy.Proxy(
     ),
 )
 
-tunnel_access = t.TunnelAccess(
+tunnel_access = tunnel.TunnelAccess(
     "tunnel",
-    t.TunnelAccessArgs(
+    tunnel.TunnelAccessArgs(
         account_id=global_stack.get_output("cloudflare_account_id"),
         github_client_id=config.require_secret("github_client_id"),
         github_client_secret=config.require_secret("github_client_secret"),
@@ -176,16 +181,35 @@ tunnel_access = t.TunnelAccess(
     ),
 )
 
-t = t.Tunnel(
+aws_tunnel = tunnel.Tunnel(
     "aws-tunnel",
-    t.TunnelArgs(
+    tunnel.TunnelArgs(
+        account_id=global_stack.get_output("cloudflare_account_id"),
+        zone_id=global_stack.get_output("cloudflare_zone_id"),
+    ),
+)
+oci_tunnel = tunnel.Tunnel(
+    "oci-tunnel",
+    tunnel.TunnelArgs(
         account_id=global_stack.get_output("cloudflare_account_id"),
         zone_id=global_stack.get_output("cloudflare_zone_id"),
     ),
 )
 
-for port, route in ROUTE_MAPPING.items():
-    t.add_route(
+for port, route in ROUTE_MAPPING_AWS.items():
+    aws_tunnel.add_route(
+        tunnel.TunnelRoute(
+            name=route.subdomain,
+            hostname=pulumi.Output.all(name=route.subdomain, domain=global_stack.get_output("domain")).apply(
+                lambda args: f"{args['name']}.{args['domain']}"
+            ),
+            service=f"http://127.0.0.1:{port}",
+            path=route.path,
+            protect=route.protected,
+        )
+    )
+for port, route in ROUTE_MAPPING_OCI.items():
+    oci_tunnel.add_route(
         tunnel.TunnelRoute(
             name=route.subdomain,
             hostname=pulumi.Output.all(name=route.subdomain, domain=global_stack.get_output("domain")).apply(
@@ -197,7 +221,8 @@ for port, route in ROUTE_MAPPING.items():
         )
     )
 
-t.create_routes(tunnel_access.policies)
+aws_tunnel.create_routes(tunnel_access.policies)
+oci_tunnel.create_routes(tunnel_access.policies)
 
 logpush.LogPush(
     "logpush",
@@ -206,6 +231,7 @@ logpush.LogPush(
     ),
 )
 
-pulumi.export("tunnel_token", t.tunnel.tunnel_token)
+pulumi.export("aws_tunnel_token", aws_tunnel.tunnel.tunnel_token)
+pulumi.export("oci_tunnel_token", oci_tunnel.tunnel.tunnel_token)
 pulumi.export("service_token_id", tunnel_access.service_token.client_id)
 pulumi.export("service_token_secret", tunnel_access.service_token.client_secret)
