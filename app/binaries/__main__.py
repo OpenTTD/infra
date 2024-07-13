@@ -1,5 +1,6 @@
 import pulumi
 import pulumi_cloudflare
+import pulumi_openttd
 
 
 config = pulumi.Config()
@@ -9,11 +10,11 @@ r2 = pulumi_cloudflare.R2Bucket(
     "r2",
     account_id=global_stack.get_output("cloudflare_account_id"),
     location="WEUR",
-    name=f"installer-{pulumi.get_stack()}",
+    name=f"installer-{pulumi_openttd.get_stack()}",
     opts=pulumi.ResourceOptions(protect=True),
 )
 
-name = f"binaries-{pulumi.get_stack()}"
+name = f"binaries-{pulumi_openttd.get_stack()}"
 worker = pulumi_cloudflare.WorkerScript(
     f"worker",
     account_id=global_stack.get_output("cloudflare_account_id"),

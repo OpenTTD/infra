@@ -30,7 +30,7 @@ class Web(pulumi.ComponentResource):
             "memory_max": args.memory_max,
             "sentry_dsn": sentry_key,
             "sentry_environment": args.sentry_environment,
-            "stack": pulumi.get_stack(),
+            "stack": pulumi_openttd.get_stack(),
             "port": args.port,
         }
 

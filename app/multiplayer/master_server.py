@@ -32,7 +32,7 @@ class MasterServer(pulumi.ComponentResource):
             "api_memory_max": args.api_memory_max,
             "api_memory": args.api_memory,
             "api_port": args.api_port,
-            "count": "1" if pulumi.get_stack() == "preview" else "2",
+            "count": "1" if pulumi_openttd.get_stack() == "preview" else "2",
             "domain": args.domain,
             "master_memory_max": args.master_memory_max,
             "master_memory": args.master_memory,
@@ -40,7 +40,7 @@ class MasterServer(pulumi.ComponentResource):
             "master_public_port": args.master_public_port,
             "sentry_dsn": sentry_key,
             "sentry_environment": args.sentry_environment,
-            "stack": pulumi.get_stack(),
+            "stack": pulumi_openttd.get_stack(),
             "target": target,
         }
 

@@ -22,7 +22,7 @@ SETTINGS = {
     "memory": config.require("memory"),
     "sentry_dsn": sentry_key,
     "sentry_environment": config.require("sentry-environment"),
-    "stack": pulumi.get_stack(),
+    "stack": pulumi_openttd.get_stack(),
 }
 
 service = pulumi_openttd.NomadService(

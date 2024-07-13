@@ -30,7 +30,7 @@ class NomadService(pulumi.ComponentResource):
             variables[key] = pulumi_openttd.NomadVariable(
                 f"{args.prefix}setting-{key}",
                 pulumi_openttd.NomadVariableArgs(
-                    path=f"app/{args.service}-{pulumi.get_stack()}/settings",
+                    path=f"app/{args.service}-{pulumi_openttd.get_stack()}/settings",
                     name=key,
                     value=value,
                     overwrite_if_exists=True,
@@ -41,7 +41,7 @@ class NomadService(pulumi.ComponentResource):
         variables["version"] = pulumi_openttd.NomadVariable(
             f"{args.prefix}version",
             pulumi_openttd.NomadVariableArgs(
-                path=f"app/{args.service}-{pulumi.get_stack()}/version",
+                path=f"app/{args.service}-{pulumi_openttd.get_stack()}/version",
                 name="version",
                 value=":edge",  # Just the initial value.
                 overwrite_if_exists=False,
@@ -53,7 +53,7 @@ class NomadService(pulumi.ComponentResource):
         pulumi_openttd.NomadVariable(
             f"{args.prefix}jobspec",
             pulumi_openttd.NomadVariableArgs(
-                path=f"app/{args.service}-{pulumi.get_stack()}/jobspec",
+                path=f"app/{args.service}-{pulumi_openttd.get_stack()}/jobspec",
                 name="jobspec",
                 value=base64.b64encode(jobspec).decode(),
                 overwrite_if_exists=True,
@@ -76,7 +76,7 @@ class NomadService(pulumi.ComponentResource):
         pulumi_openttd.NomadVariable(
             f"{args.prefix}variable-nomad-service-key",
             pulumi_openttd.NomadVariableArgs(
-                path=f"deploy-keys/{args.service}-{pulumi.get_stack()}",
+                path=f"deploy-keys/{args.service}-{pulumi_openttd.get_stack()}",
                 name="key",
                 value=self.nomad_service_key.result,
                 overwrite_if_exists=True,
@@ -86,7 +86,7 @@ class NomadService(pulumi.ComponentResource):
         pulumi_github.ActionsSecret(
             f"{args.prefix}github-secret-nomad-service-key",
             repository=args.repository,
-            secret_name=f"NOMAD_SERVICE_{pulumi.get_stack().upper()}_KEY",
+            secret_name=f"NOMAD_SERVICE_{pulumi_openttd.get_stack().upper()}_KEY",
             plaintext_value=self.nomad_service_key.result,
             opts=pulumi.ResourceOptions(parent=self, delete_before_replace=True),
         )

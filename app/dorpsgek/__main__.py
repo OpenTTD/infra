@@ -36,13 +36,13 @@ SETTINGS = {
     "port": config.require("port"),
     "sentry_dsn": sentry_key,
     "sentry_environment": config.require("sentry-environment"),
-    "stack": pulumi.get_stack(),
+    "stack": pulumi_openttd.get_stack(),
 }
 
 volume = pulumi_openttd.VolumeEfs(
     f"volume-cache",
     pulumi_openttd.VolumeEfsArgs(
-        name=f"dorpsgek-{pulumi.get_stack()}",
+        name=f"dorpsgek-{pulumi_openttd.get_stack()}",
         subnet_arns=aws_core_stack.get_output("private_subnet_arns"),
         subnet_ids=aws_core_stack.get_output("private_subnet_ids"),
         security_group_arn=aws_core_stack.get_output("nomad_security_group_arn"),
@@ -62,7 +62,7 @@ service = pulumi_openttd.NomadService(
     ),
 )
 
-name = f"weblogs-{pulumi.get_stack()}"
+name = f"weblogs-{pulumi_openttd.get_stack()}"
 worker = pulumi_cloudflare.WorkerScript(
     f"worker",
     account_id=global_stack.get_output("cloudflare_account_id"),

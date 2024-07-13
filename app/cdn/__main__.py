@@ -2,6 +2,7 @@ import hashlib
 import pulumi
 import pulumi_cloudflare
 import pulumi_github
+import pulumi_openttd
 import pulumi_tls
 
 
@@ -12,7 +13,7 @@ r2 = pulumi_cloudflare.R2Bucket(
     "r2",
     account_id=global_stack.get_output("cloudflare_account_id"),
     location="WEUR",
-    name=f"cdn-{pulumi.get_stack()}",
+    name=f"cdn-{pulumi_openttd.get_stack()}",
     opts=pulumi.ResourceOptions(protect=True),
 )
 
@@ -31,7 +32,7 @@ for folder, repository in config.require_object("whitelist-upload-folders").item
         key_pair = pulumi_tls.PrivateKey(f"key-pair-{repository.lower()}", algorithm="RSA", rsa_bits=2048)
         key_pairs[repository] = key_pair
 
-        if pulumi.get_stack() == "prod":
+        if pulumi_openttd.get_stack() == "prod":
             # Add the private key to GitHub secrets.
             pulumi_github.ActionsSecret(
                 f"{repository.lower()}-github-secret-upload-key",
@@ -72,7 +73,7 @@ content = pulumi.Output.all(content=content, public_keys=public_keys).apply(
     lambda kwargs: kwargs["content"].replace("[[ public_keys ]]", kwargs["public_keys"])
 )
 
-name = f"cdn-{pulumi.get_stack()}"
+name = f"cdn-{pulumi_openttd.get_stack()}"
 worker = pulumi_cloudflare.WorkerScript(
     "worker",
     account_id=global_stack.get_output("cloudflare_account_id"),
@@ -98,7 +99,7 @@ pulumi_cloudflare.WorkerDomain(
     opts=pulumi.ResourceOptions(parent=worker),
 )
 
-if pulumi.get_stack() == "prod":
+if pulumi_openttd.get_stack() == "prod":
     permission_groups = pulumi_cloudflare.get_api_token_permission_groups()
     resources = pulumi.Output.all(account_id=global_stack.get_output("cloudflare_account_id"), s3_bucket=r2.name).apply(
         lambda kwargs: {f"com.cloudflare.edge.r2.bucket.{kwargs['account_id']}_default_{kwargs['s3_bucket']}": "*"}

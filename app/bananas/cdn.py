@@ -1,5 +1,6 @@
 import pulumi
 import pulumi_cloudflare
+import pulumi_openttd
 
 from dataclasses import dataclass
 
@@ -20,7 +21,7 @@ class Cdn(pulumi.ComponentResource):
             "r2",
             account_id=args.cloudflare_account_id,
             location="WEUR",
-            name=f"bananas-{pulumi.get_stack()}",
+            name=f"bananas-{pulumi_openttd.get_stack()}",
             opts=pulumi.ResourceOptions(protect=True),
         )
 
@@ -29,7 +30,7 @@ class Cdn(pulumi.ComponentResource):
             lambda account_id: f"https://{account_id}.r2.cloudflarestorage.com"
         )
 
-        name = f"bananas-cdn-{pulumi.get_stack()}"
+        name = f"bananas-cdn-{pulumi_openttd.get_stack()}"
         worker = pulumi_cloudflare.WorkerScript(
             f"worker",
             account_id=args.cloudflare_account_id,

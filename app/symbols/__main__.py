@@ -2,6 +2,7 @@ import pulumi
 import pulumi_cloudflare
 import pulumi_github
 import pulumi_tls
+import pulumi_openttd
 
 
 config = pulumi.Config()
@@ -11,7 +12,7 @@ r2 = pulumi_cloudflare.R2Bucket(
     "r2",
     account_id=global_stack.get_output("cloudflare_account_id"),
     location="WEUR",
-    name=f"symbols-{pulumi.get_stack()}",
+    name=f"symbols-{pulumi_openttd.get_stack()}",
     opts=pulumi.ResourceOptions(protect=True),
 )
 
@@ -26,7 +27,7 @@ for repository in config.require_object("whitelist-projects"):
     key_pair = pulumi_tls.PrivateKey(f"key-pair-{repository.lower()}", algorithm="RSA", rsa_bits=2048)
     key_pairs[repository] = key_pair
 
-    if pulumi.get_stack() == "prod":
+    if pulumi_openttd.get_stack() == "prod":
         # Add the private key to GitHub secrets.
         pulumi_github.ActionsSecret(
             f"{repository.lower()}-github-secret-upload-key",
@@ -51,7 +52,7 @@ content = pulumi.Output.all(content=content, public_keys=public_keys).apply(
     lambda kwargs: kwargs["content"].replace("[[ public_keys ]]", kwargs["public_keys"])
 )
 
-name = f"symbols-{pulumi.get_stack()}"
+name = f"symbols-{pulumi_openttd.get_stack()}"
 worker = pulumi_cloudflare.WorkerScript(
     "worker",
     account_id=global_stack.get_output("cloudflare_account_id"),

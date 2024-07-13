@@ -24,12 +24,12 @@ class Web(pulumi.ComponentResource):
 
         SETTINGS = {
             "api_url": api_url,
-            "count": "1" if pulumi.get_stack() == "preview" else "2",
+            "count": "1" if pulumi_openttd.get_stack() == "preview" else "2",
             "memory": args.memory,
             "memory_max": args.memory_max,
             "sentry_dsn": sentry_key,
             "sentry_environment": args.sentry_environment,
-            "stack": pulumi.get_stack(),
+            "stack": pulumi_openttd.get_stack(),
             "port": args.port,
         }
 

@@ -31,7 +31,7 @@ SETTINGS = {
     "reload_secret": reload_secret.result,
     "sentry_dsn": sentry_key,
     "sentry_environment": config.require("sentry-environment"),
-    "stack": pulumi.get_stack(),
+    "stack": pulumi_openttd.get_stack(),
     "storage_github_app_id": config.require("storage-github-app-id"),
     "storage_github_app_key": config.require_secret("storage-github-app-key"),
     "storage_github_history_url": config.require("storage-github-history-url"),
@@ -43,7 +43,7 @@ SETTINGS = {
 volume = pulumi_openttd.VolumeEfs(
     f"volume-cache",
     pulumi_openttd.VolumeEfsArgs(
-        name=f"wiki-{pulumi.get_stack()}-cache",
+        name=f"wiki-{pulumi_openttd.get_stack()}-cache",
         subnet_arns=aws_core_stack.get_output("private_subnet_arns"),
         subnet_ids=aws_core_stack.get_output("private_subnet_ids"),
         security_group_arn=aws_core_stack.get_output("nomad_security_group_arn"),
@@ -67,11 +67,11 @@ r2 = pulumi_cloudflare.R2Bucket(
     "r2",
     account_id=global_stack.get_output("cloudflare_account_id"),
     location="WEUR",
-    name=f"wiki-cache-{pulumi.get_stack()}",
+    name=f"wiki-cache-{pulumi_openttd.get_stack()}",
     opts=pulumi.ResourceOptions(protect=True),
 )
 
-name = f"wiki-{pulumi.get_stack()}-cache"
+name = f"wiki-{pulumi_openttd.get_stack()}-cache"
 worker = pulumi_cloudflare.WorkerScript(
     f"worker",
     account_id=global_stack.get_output("cloudflare_account_id"),

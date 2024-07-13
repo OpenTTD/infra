@@ -39,17 +39,17 @@ class GameCoordinator(pulumi.ComponentResource):
         target = pulumi.get_stack().split("-")[1]
 
         SETTINGS = {
-            "affinity_port": "6001" if pulumi.get_stack() == "preview" else "6002",
+            "affinity_port": "6001" if pulumi_openttd.get_stack() == "preview" else "6002",
             "coordinator_memory_max": args.coordinator_memory_max,
             "coordinator_memory": args.coordinator_memory,
             "coordinator_port": args.coordinator_port,
             "coordinator_public_port": args.coordinator_public_port,
-            "count": "1" if pulumi.get_stack() == "preview" else "2",
+            "count": "1" if pulumi_openttd.get_stack() == "preview" else "2",
             "domain": args.domain,
             "sentry_dsn": sentry_key,
             "sentry_environment": args.sentry_environment,
             "shared_secret": args.shared_secret,
-            "stack": pulumi.get_stack(),
+            "stack": pulumi_openttd.get_stack(),
             "stun_memory_max": args.stun_memory_max,
             "stun_memory": args.stun_memory,
             "stun_port": args.stun_port,

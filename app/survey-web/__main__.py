@@ -2,6 +2,7 @@ import hashlib
 import pulumi
 import pulumi_cloudflare
 import pulumi_github
+import pulumi_openttd
 
 
 config = pulumi.Config()
@@ -11,14 +12,14 @@ r2_survey = pulumi_cloudflare.R2Bucket(
     "r2",
     account_id=global_stack.get_output("cloudflare_account_id"),
     location="WEUR",
-    name=f"survey-{pulumi.get_stack()}",
+    name=f"survey-{pulumi_openttd.get_stack()}",
     opts=pulumi.ResourceOptions(protect=True),
 )
 r2_survey_packed = pulumi_cloudflare.R2Bucket(
     "r2-packed",
     account_id=global_stack.get_output("cloudflare_account_id"),
     location="WEUR",
-    name=f"survey-packed-{pulumi.get_stack()}",
+    name=f"survey-packed-{pulumi_openttd.get_stack()}",
     opts=pulumi.ResourceOptions(protect=True),
 )
 

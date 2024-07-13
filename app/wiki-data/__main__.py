@@ -4,7 +4,7 @@ import pulumi_openttd
 
 
 config = pulumi.Config()
-app_wiki_stack = pulumi.StackReference(f"{pulumi.get_organization()}/app-wiki/{pulumi.get_stack()}")
+app_wiki_stack = pulumi.StackReference(f"{pulumi.get_organization()}/app-wiki/{pulumi_openttd.get_stack()}")
 
 
 pulumi_openttd.autotag.register()
@@ -20,7 +20,7 @@ pulumi_github.ActionsSecret(
 pulumi_github.ActionsSecret(
     f"github-secret-nomad-service-key",
     repository=config.require("storage-github-url").split("/")[-1],
-    secret_name=f"NOMAD_SERVICE_{pulumi.get_stack().upper()}_KEY",
+    secret_name=f"NOMAD_SERVICE_{pulumi_openttd.get_stack().upper()}_KEY",
     plaintext_value=app_wiki_stack.get_output("nomad_service_key"),
     opts=pulumi.ResourceOptions(delete_before_replace=True),
 )

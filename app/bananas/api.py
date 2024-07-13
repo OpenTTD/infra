@@ -67,7 +67,7 @@ class Api(pulumi.ComponentResource):
             "reload_secret": reload_secret.result,
             "sentry_dsn": sentry_key,
             "sentry_environment": args.sentry_environment,
-            "stack": pulumi.get_stack(),
+            "stack": pulumi_openttd.get_stack(),
             "storage_s3_access_key_id": api_token.id,
             "storage_s3_bucket": args.s3_bucket,
             "storage_s3_endpoint_url": args.s3_endpoint_url,
@@ -102,7 +102,7 @@ class Api(pulumi.ComponentResource):
         pulumi_github.ActionsSecret(
             f"api-github-secret-nomad-service-key",
             repository=args.index_github_url.split("/")[-1],
-            secret_name=f"API_NOMAD_SERVICE_{pulumi.get_stack().upper()}_KEY",
+            secret_name=f"API_NOMAD_SERVICE_{pulumi_openttd.get_stack().upper()}_KEY",
             plaintext_value=service.nomad_service_key.result,
             opts=pulumi.ResourceOptions(parent=self, delete_before_replace=True),
         )

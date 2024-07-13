@@ -1,12 +1,13 @@
 import pulumi
 import pulumi_cloudflare
 import pulumi_github
+import pulumi_openttd
 
 
 config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
 
-if pulumi.get_stack() == "prod":
+if pulumi_openttd.get_stack() == "prod":
     project = pulumi_cloudflare.PagesProject(
         "pages",
         account_id=global_stack.get_output("cloudflare_account_id"),
@@ -56,7 +57,7 @@ if pulumi.get_stack() == "prod":
         opts=pulumi.ResourceOptions(delete_before_replace=True),
     )
 
-name = f"preview-{pulumi.get_stack()}"
+name = f"preview-{pulumi_openttd.get_stack()}"
 worker = pulumi_cloudflare.WorkerScript(
     f"worker",
     account_id=global_stack.get_output("cloudflare_account_id"),

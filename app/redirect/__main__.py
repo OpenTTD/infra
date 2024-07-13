@@ -1,5 +1,6 @@
 import pulumi
 import pulumi_cloudflare
+import pulumi_openttd
 
 
 config = pulumi.Config()
@@ -18,7 +19,7 @@ HOSTNAMES = [
     "security",
 ]
 
-name = f"redirect-{pulumi.get_stack()}"
+name = f"redirect-{pulumi_openttd.get_stack()}"
 worker = pulumi_cloudflare.WorkerScript(
     "worker",
     account_id=global_stack.get_output("cloudflare_account_id"),

@@ -27,7 +27,7 @@ SETTINGS = {
     "port": config.require("port"),
     "sentry_dsn": sentry_key,
     "sentry_environment": config.require("sentry-environment"),
-    "stack": pulumi.get_stack(),
+    "stack": pulumi_openttd.get_stack(),
     "github_org_api_token": config.require_secret("github-org-api-token"),
     "github_oauth2_client_id": config.require("github-oauth2-client-id"),
     "github_oauth2_client_secret": config.require_secret("github-oauth2-client-secret"),
@@ -37,7 +37,7 @@ SETTINGS = {
 volume = pulumi_openttd.VolumeEfs(
     f"volume-cache",
     pulumi_openttd.VolumeEfsArgs(
-        name=f"eints-{pulumi.get_stack()}",
+        name=f"eints-{pulumi_openttd.get_stack()}",
         subnet_arns=aws_core_stack.get_output("private_subnet_arns"),
         subnet_ids=aws_core_stack.get_output("private_subnet_ids"),
         security_group_arn=aws_core_stack.get_output("nomad_security_group_arn"),
@@ -60,7 +60,7 @@ service = pulumi_openttd.NomadService(
 pulumi_github.ActionsSecret(
     f"github-secret-translators-password",
     repository=config.require("workflow-github-url").split("/")[-1],
-    secret_name=f"TRANSLATORS_{pulumi.get_stack().upper()}",
+    secret_name=f"TRANSLATORS_{pulumi_openttd.get_stack().upper()}",
     plaintext_value=translators_password.result,
     opts=pulumi.ResourceOptions(delete_before_replace=True),
 )
