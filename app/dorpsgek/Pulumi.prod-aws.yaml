@@ -20,3 +20,4 @@ config:
   app-dorpsgek:sentry-environment: production
   app-dorpsgek:weblogs-hostname: weblogs
   github:owner: OpenTTD
+  nomad:address: http://127.0.0.1:4848

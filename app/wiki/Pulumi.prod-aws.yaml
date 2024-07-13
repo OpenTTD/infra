@@ -13,3 +13,4 @@ config:
   app-wiki:user-github-client-secret:
     secure: AAABANjgGBKdlslE4HQ4qG3xhVxrYvbuyN5FOGi1qj9hIPx3tO3Kh58g4XQeZe41yDVx5nMQg3sYGxETb2ieWEwU0CUplQL6
   github:owner: TrueBrain
+  nomad:address: http://127.0.0.1:4848

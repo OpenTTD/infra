@@ -9,3 +9,4 @@ config:
   app-dibridge:memory-max: "128"
   app-dibridge:sentry-environment: preview
   github:owner: OpenTTD
+  nomad:address: http://127.0.0.1:4848

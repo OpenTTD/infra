@@ -32,3 +32,4 @@ config:
   app-multiplayer:web-memory: "96"
   app-multiplayer:web-port: "11046"
   github:owner: OpenTTD
+  nomad:address: http://127.0.0.1:4848

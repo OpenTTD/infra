@@ -11,3 +11,4 @@ config:
   app-eints:sentry-environment: production
   app-eints:workflow-github-url: https://github.com/OpenTTD/workflows
   github:owner: OpenTTD
+  nomad:address: http://127.0.0.1:4848

@@ -10,7 +10,6 @@ import web
 
 config = pulumi.Config()
 global_stack = pulumi.StackReference(f"{pulumi.get_organization()}/global-config/prod")
-aws_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/aws-core/prod")
 cloudflare_core_stack = pulumi.StackReference(f"{pulumi.get_organization()}/cloudflare-core/prod")
 
 
