@@ -36,10 +36,6 @@ ROUTE_MAPPING_AWS = {
     "11045": RouteMappingArgs(subdomain="servers-api"),
     "11046": RouteMappingArgs(subdomain="servers"),
     "12000": RouteMappingArgs(subdomain="wiki-preview"),
-    "12010": RouteMappingArgs(subdomain="bananas-preview-server"),
-    "12012": RouteMappingArgs(subdomain="bananas-preview-api", path="/new-package/tus/*"),
-    "12013": RouteMappingArgs(subdomain="bananas-preview-api"),
-    "12014": RouteMappingArgs(subdomain="bananas-preview"),
     "12020": RouteMappingArgs(subdomain="dorpsgek-preview"),
     "12030": RouteMappingArgs(subdomain="translator-preview"),
     "12045": RouteMappingArgs(subdomain="servers-preview-api"),
@@ -49,6 +45,10 @@ ROUTE_MAPPING_OCI = {
     "8686": RouteMappingArgs(subdomain="nomad-oci", protected=True),
     "10000": RouteMappingArgs(subdomain="nomad-oci-service"),
     "10010": RouteMappingArgs(subdomain="nomad-oci-prom", protected=True),
+    "12010": RouteMappingArgs(subdomain="bananas-preview-server"),
+    "12012": RouteMappingArgs(subdomain="bananas-preview-api", path="/new-package/tus/*"),
+    "12013": RouteMappingArgs(subdomain="bananas-preview-api"),
+    "12014": RouteMappingArgs(subdomain="bananas-preview"),
 }
 
 # Subdomains where HTTP is allowed.

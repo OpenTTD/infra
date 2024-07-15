@@ -23,4 +23,4 @@ config:
   app-bananas:web-memory-max: "64"
   app-bananas:web-port: "12014"
   github:owner: OpenTTD
-  nomad:address: http://127.0.0.1:4848
+  nomad:address: http://127.0.0.1:4747
