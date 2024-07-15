@@ -1,6 +1,6 @@
 # OpenTTD's infrastructure
 
-In this repository are several [Pulumi](pulumi.com/) projects that combined declare all of OpenTTD's infrastructure as code.
+In this repository are several [Pulumi](https://pulumi.com/) projects that combined declare all of OpenTTD's infrastructure as code.
 
 ## Prerequisite
 
