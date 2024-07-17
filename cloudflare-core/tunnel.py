@@ -29,7 +29,6 @@ class TunnelRoute:
     protect: bool = False
 
 
-
 class TunnelAccess(pulumi.ComponentResource):
     def __init__(self, name, args: TunnelAccessArgs, opts: pulumi.ResourceOptions = None):
         super().__init__("openttd:cf:TunnelAccess", name, None, opts)
@@ -77,33 +76,37 @@ class TunnelAccess(pulumi.ComponentResource):
 
         self.policies = []
 
-        self.policies.append(pulumi_cloudflare.AccessPolicy(
-            f"{self._name}-app-policy",
-            account_id=args.account_id,
-            decision="allow",
-            includes=[
-                pulumi_cloudflare.AccessPolicyIncludeArgs(
-                    groups=[
-                        access_group.id,
-                    ],
-                ),
-            ],
-            name="Policy",
-            opts=pulumi.ResourceOptions(parent=access_group),
-        ))
+        self.policies.append(
+            pulumi_cloudflare.AccessPolicy(
+                f"{self._name}-app-policy",
+                account_id=args.account_id,
+                decision="allow",
+                includes=[
+                    pulumi_cloudflare.AccessPolicyIncludeArgs(
+                        groups=[
+                            access_group.id,
+                        ],
+                    ),
+                ],
+                name="Policy",
+                opts=pulumi.ResourceOptions(parent=access_group),
+            )
+        )
 
-        self.policies.append(pulumi_cloudflare.AccessPolicy(
-            f"{self._name}-app-policy-st",
-            account_id=args.account_id,
-            decision="non_identity",
-            includes=[
-                pulumi_cloudflare.AccessPolicyIncludeArgs(
-                    service_tokens=[self.service_token.id],
-                ),
-            ],
-            name="Service Token",
-            opts=pulumi.ResourceOptions(parent=self.service_token),
-        ))
+        self.policies.append(
+            pulumi_cloudflare.AccessPolicy(
+                f"{self._name}-app-policy-st",
+                account_id=args.account_id,
+                decision="non_identity",
+                includes=[
+                    pulumi_cloudflare.AccessPolicyIncludeArgs(
+                        service_tokens=[self.service_token.id],
+                    ),
+                ],
+                name="Service Token",
+                opts=pulumi.ResourceOptions(parent=self.service_token),
+            )
+        )
 
         self.register_outputs({})
 
