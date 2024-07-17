@@ -4,6 +4,7 @@ import pulumi_cloudflare
 from dataclasses import dataclass
 
 import logpush
+import nomad_service_worker
 import proxy
 import tunnel
 
@@ -23,7 +24,7 @@ class RouteMappingArgs:
 # Port -> (Public, Subdomain, Path)
 ROUTE_MAPPING_AWS = {
     "8686": RouteMappingArgs(subdomain="nomad-aws", protected=True),
-    "10000": RouteMappingArgs(subdomain="nomad-service"),
+    "10000": RouteMappingArgs(subdomain="nomad-aws-service"),
     "10010": RouteMappingArgs(subdomain="nomad-aws-prom", protected=True),
     "11000": RouteMappingArgs(subdomain="wiki"),
     "11010": RouteMappingArgs(subdomain="bananas-server"),
@@ -46,7 +47,7 @@ ROUTE_MAPPING_AWS = {
 }
 ROUTE_MAPPING_OCI = {
     "8686": RouteMappingArgs(subdomain="nomad-oci", protected=True),
-    # "10000": RouteMappingArgs(subdomain="nomad-oci-service"),
+    "10000": RouteMappingArgs(subdomain="nomad-oci-service"),
     "10010": RouteMappingArgs(subdomain="nomad-oci-prom", protected=True),
 }
 
@@ -176,6 +177,15 @@ proxy.Proxy(
         hostname=global_stack.get_output("domain").apply(lambda domain: f"grafana-prometheus-proxy.{domain}"),
         proxy_to=global_stack.get_output("grafana_prometheus_hostname"),
         type="transparent",
+        zone_id=global_stack.get_output("cloudflare_zone_id"),
+    ),
+)
+
+nomad_service_worker.NomadServiceWorker(
+    "nomad-service-worker",
+    nomad_service_worker.NomadServiceWorkerArgs(
+        account_id=global_stack.get_output("cloudflare_account_id"),
+        hostname=global_stack.get_output("domain").apply(lambda domain: f"nomad-service.{domain}"),
         zone_id=global_stack.get_output("cloudflare_zone_id"),
     ),
 )

@@ -49,6 +49,9 @@ async def healthz_handler(request):
 
 @routes.post("/autoscaling/{service}/{key}")
 async def autoscaling_handler(request):
+    if "[[ target ]]" != "aws":
+        return web.HTTPNotFound()
+
     service = request.match_info["service"]
     key = request.match_info["key"]
     payload = await request.json()

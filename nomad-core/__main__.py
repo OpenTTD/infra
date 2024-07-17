@@ -106,7 +106,7 @@ pulumi_nomad.Job(
     purge_on_destroy=True,
 )
 
-content = open("files/nomad-service.py").read()
+content = open("files/nomad-service.py").read().replace("[[ target ]]", target)
 pulumi_nomad.Job(
     "nomad-service",
     jobspec=open("files/nomad-service.nomad").read().replace("[[ content ]]", content),
