@@ -82,10 +82,7 @@ class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
         if args["overwrite_if_exists"] or args["name"] not in current_vars["Items"]:
             current_vars["Items"][args["name"]] = args["value"]
 
-        # Only actually update when there was an actual change. Otherwise it is most likely
-        # just Pulumi doing internal updates.
-        if old_args["value"] != args["value"]:
-            local_run(self.nomad_address, "nomad var put -in json -", stdin=json.dumps(current_vars))
+        local_run(self.nomad_address, "nomad var put -in json -", stdin=json.dumps(current_vars))
 
         return pulumi.dynamic.UpdateResult(args)
 
