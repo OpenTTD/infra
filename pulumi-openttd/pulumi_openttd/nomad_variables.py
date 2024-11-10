@@ -117,6 +117,8 @@ class NomadVariableProvider(pulumi.dynamic.ResourceProvider):
 
         if old_args["value"] != args["value"] and args["overwrite_if_exists"]:
             changes = True
+        if old_args["value"] == "" and not args["overwrite_if_exists"]:
+            changes = True
 
         # Don't attempt to update change of name/path cleanly, and just delete and recreate.
         if old_args["name"] != args["name"] or old_args["path"] != args["path"]:
