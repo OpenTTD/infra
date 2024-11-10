@@ -22,7 +22,8 @@ ip6tables -P FORWARD ACCEPT
 # Configure the docker daemon to use this prefix.
 echo "{" > /etc/docker/daemon.json
 echo "  \"ipv6\": true," >> /etc/docker/daemon.json
-echo "  \"fixed-cidr-v6\": \"${DOCKER_PREFIX}\"" >> /etc/docker/daemon.json
+echo "  \"fixed-cidr-v6\": \"${DOCKER_PREFIX}\"," >> /etc/docker/daemon.json
+echo "  \"ip6tables\": false" >> /etc/docker/daemon.json
 echo "}" >> /etc/docker/daemon.json
 
 systemctl start docker
