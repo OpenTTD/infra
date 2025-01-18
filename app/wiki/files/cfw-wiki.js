@@ -98,7 +98,9 @@ export default {
       /* Not in the cache; check the R2 bucket. */
       const object = await env.BUCKET_CACHE.get(objectName);
 
-      if (object !== null) {
+      /* Sometimes, for what-ever reason, there are either 0-byte files cached or exactly 500 bytes.
+       * Neither is actually a valid cache result. So invalidate it. */
+      if (object !== null && object.size !== 0 && object.size !== 500) {
         /* Check with the backend if this resource is still fresh. */
         let backendRequest = strippedRequest.clone();
         backendRequest.headers.set('If-None-Match', object.customMetadata.etag);
