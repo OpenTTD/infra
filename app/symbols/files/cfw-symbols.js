@@ -63,7 +63,19 @@ async function handleUploadFile(request, env) {
     }
   );
   if (!result_put) {
-    return new Response('Internal Server Error', { status: 500 });
+    // Wait for 0.5s, and just try again. Maybe it works now?
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const result_put = await env.BUCKET_SYMBOLS.put(objectName, request.body,
+      {
+        httpMetadata: {
+          contentType: content_type,
+        }
+      }
+    );
+    if (!result_put) {
+        return new Response('Internal Server Error', { status: 500 });
+    }
   }
   return new Response('OK', { status: 200 });
 }
