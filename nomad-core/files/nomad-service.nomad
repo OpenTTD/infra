@@ -82,16 +82,14 @@ EOT
         data =<<EOT
 {
 
-{{- define "getService" -}}
-  {{- range . -}}
+{{- range nomadServices }}
+  {{- $service := 0 }}
+  {{- range .Tags -}}
     {{- if . | regexMatch "reloadable=[a-zA-Z0-9-]+" -}}
-      {{ . | trimPrefix "reloadable=" }}
+      {{- $service = . | trimPrefix "reloadable=" }}
     {{- end -}}
   {{- end -}}
-{{- end -}}
 
-{{- range nomadServices }}
-  {{- $service := executeTemplate "getService" .Tags }}
   {{- if $service }}
   "{{ $service }}": [
   {{- range nomadService .Name }}

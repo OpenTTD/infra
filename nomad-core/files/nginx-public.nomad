@@ -87,19 +87,16 @@ EOT
       template {
         data = <<EOF
 
-{{- define "getPort" -}}
-  {{- range . -}}
-    {{- if . | regexMatch "public=[0-9]+" -}}
-      {{ . | trimPrefix "public=" }}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
-
 stream {
 {{- range nomadServices }}
-{{- $port := executeTemplate "getPort" .Tags }}
-
+{{- $port := 0 }}
+{{- range .Tags -}}
+  {{- if . | regexMatch "public=[0-9]+" -}}
+    {{- $port = . | trimPrefix "public=" }}
+  {{- end -}}
+{{- end -}}
 {{- if $port }}
+
   upstream {{ .Name | toLower }} {
     hash $remote_addr;
 

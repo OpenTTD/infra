@@ -83,17 +83,14 @@ EOT
       template {
         data = <<EOF
 
-{{- define "getPort" -}}
-  {{- range . -}}
-    {{- if . | regexMatch "port=[0-9]+" -}}
-      {{ . | trimPrefix "port=" }}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
-
 stream {
 {{- range nomadServices }}
-{{- $port := executeTemplate "getPort" .Tags }}
+{{- $port := 0 }}
+{{- range .Tags -}}
+  {{- if . | regexMatch "port=[0-9]+" -}}
+    {{- $port = . | trimPrefix "port=" }}
+  {{- end -}}
+{{- end -}}
 {{- if $port }}
 
   upstream {{ .Name | toLower }} {
