@@ -12,7 +12,7 @@ client {
   enabled = true
   max_kill_timeout = "24h"
   server_join {
-    retry_join = ["provider=aws endpoint=ec2.eu-west-1.api.aws addr_type=private_v4 region=eu-west-1 tag_key=AutoJoin tag_value=nomad"]
+    retry_join = ["provider=aws service=ec2 endpoint=https://ec2.eu-west-1.api.aws addr_type=private_v4 region=eu-west-1 tag_key=AutoJoin tag_value=nomad"]
   }
 }
 
