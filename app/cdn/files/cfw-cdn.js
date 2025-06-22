@@ -48,6 +48,24 @@ async function handleUploadFile(request, env) {
   /* Do not allow overwriting files. */
   const result_head = await env.BUCKET_CDN.head(objectName);
   if (result_head) {
+    /* If the object exists, check if the md5 checksum matches with the request body. */
+
+    const digestStream = new crypto.DigestStream("MD5");
+    request.body.pipeTo(digestStream);
+    const requestDigest = await digestStream.digest;
+    const requestMd5 = [...new Uint8Array(requestDigest)]
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+
+    const objectMd5 = [...new Uint8Array(result_head.checksums.md5)]
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+
+    /* This was a reupload of the same file. Act like it succeeded. */
+    if (objectMd5 === requestMd5) {
+      return new Response('OK - Identical File Already Exists', { status: 200 });
+    }
+
     return new Response('File Already Exists', { status: 409 });
   }
 
@@ -60,19 +78,7 @@ async function handleUploadFile(request, env) {
     }
   );
   if (!result_put) {
-    // Wait for 0.5s, and just try again. Maybe it works now?
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const result_put = await env.BUCKET_CDN.put(objectName, request.body,
-      {
-        httpMetadata: {
-          contentType: content_type,
-        }
-      }
-    );
-    if (!result_put) {
-        return new Response('Internal Server Error', { status: 500 });
-    }
+    return new Response('Internal Server Error', { status: 500 });
   }
   return new Response('OK', { status: 200 });
 }
