@@ -6,8 +6,8 @@ config:
   app-cdn:whitelist-upload-folders:
     opengfx-nightlies: OpenGFX
     opengfx-releases: OpenGFX
-    opengfx2-nightlies: OpenGFX2
-    opengfx2-releases: OpenGFX2
+    opengfx2_classic-nightlies: OpenGFX2
+    opengfx2_classic-releases: OpenGFX2
     openmsx-nightlies: OpenMSX
     openmsx-releases: OpenMSX
     opensfx-nightlies: OpenSFX
