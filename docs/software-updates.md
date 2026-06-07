@@ -8,6 +8,9 @@ There are two reasons to keep things updated on the regular:
   Doing it on the regular reduces that risks, making it easier to spot why a dependency update broke something.
 - If a dependency is hit by a CVE, you can update quickly without worrying too much about unrelated dependency updates.
 
+In order to help updating software, you need to be in the team `Backend Horses`.
+If you are not in that group, ask `glx`, `LordAro` or `2TallTyler` to be added.
+
 ## Production
 
 As one should update like every 3 months (and so pretty repetitive), it is made as easy as possible:
